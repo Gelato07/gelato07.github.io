@@ -14,9 +14,9 @@ timezone:
 # jekyll-seo-tag settings › https://github.com/jekyll/jekyll-seo-tag/blob/master/docs/usage.md
 # ↓ --------------------------
 
-title: Chirpy # the main title
+title: Bits & Bobs Of Cyber Obssesions # the main title
 
-tagline: A text-focused Jekyll theme # it will display as the subtitle
+tagline: Lachlan Gelavis # it will display as the subtitle
 
 description: >- # used by seo meta and the atom feed
   A minimal, responsive and feature-rich Jekyll theme for technical writing.
@@ -26,15 +26,12 @@ description: >- # used by seo meta and the atom feed
 url: "https://gelato07.github.io"
 
 github:
-  username: github_username # change to your GitHub username
-
-twitter:
-  username: twitter_username # change to your Twitter username
+  username: gelato07 # change to your GitHub username
 
 social:
   # Change to your full name.
   # It will be displayed as the default author of the posts and the copyright owner in the Footer
-  name: your_full_name
+  name: Lachlan Gelavis
   email: example@domain.com # change to your email address
   fediverse_handle: # fill in your fediverse handle. E.g. "@username@domain.com"
   links:
@@ -99,7 +96,7 @@ theme_mode: # [light | dark]
 cdn:
 
 # the avatar on sidebar, support local or CORS resources
-avatar:
+avatar: https://media.licdn.com/dms/image/v2/D5603AQGrYvnyzdTnQw/profile-displayphoto-shrink_400_400/B56ZRiMKwEGoAg-/0/1736814145205?e=1791417600&v=beta&t=Xze1Xv-CEi6KY0aXRo_RzBuwV_-IXtbolaXxtE4qZrw
 
 # The URL of the site-wide social preview image used in SEO `og:image` meta tag.
 # It can be overridden by a customized `page.image` in front matter.
