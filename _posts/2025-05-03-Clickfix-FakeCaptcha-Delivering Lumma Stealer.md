@@ -3,7 +3,7 @@ title: "Fake CAPTCHAs: How Attackers Are Using Them to Spread Malware"
 date: 2025-05-02 00:00:00 +0800
 categories: [Articles]
 tags: [Cyber Stuff]
-description: "A breakdown of fake CAPTCHA malvertising campaigns used to deliver malware and information stealers like Lumma, with a look at the attack flow, detection, and response actions."
+description: "A breakdown of fake CAPTCHA malvertising campaigns used to deliver malware and information stealers like LummaStealer and StealC with a look at attack flows, findings, detection ideas to put in place, and response actions."
 published: true
 ---
 
