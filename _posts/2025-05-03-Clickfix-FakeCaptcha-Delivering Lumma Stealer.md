@@ -28,6 +28,8 @@ The flowchart below illustrates the attack chain of a fake CAPTCHA malvertising 
 
 *[ClickFix - Fake CAPTCHA Attack Flow]*
 
+![ClickFix - Fake CAPTCHA Attack Flow](https://www.triskelelabs.com/hs-fs/hubfs/ClickFix%20-%20Fake%20CAPTCHA%20Attack%20Flow-01.png?width=5334&height=3000&name=ClickFix%20-%20Fake%20CAPTCHA%20Attack%20Flow-01.png)
+
 ### Initial Access Vectors
 
 Attackers primarily use malvertising techniques, embedding malicious advertisements or exploiting compromised legitimate websites to redirect unsuspecting users to fraudulent CAPTCHA pages. These deceptive pages instruct users to complete a fake verification process.
