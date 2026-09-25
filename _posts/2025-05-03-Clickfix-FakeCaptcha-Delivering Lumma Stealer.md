@@ -1,11 +1,9 @@
 ---
-title: "Clickfix/FakeCaptcha Delivering Lumma Stealer"
+title: "Clickfix/FakeCaptcha Campaigns: Delivering Lumma Stealer"
 date: 2025-05-03 00:00:00 +0800
 categories: [Investigations]
 tags: [Cyber Stuff]
 ---
-
-# Fake CAPTCHA Campaigns: The Rise of ClickFix Malware
 
 **2 May 2025**
 **Prepared by:** Lachlan Gelavis, Level 1 Security Analyst, Security Operations Centre
