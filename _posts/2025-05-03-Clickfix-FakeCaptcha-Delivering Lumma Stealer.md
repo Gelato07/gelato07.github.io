@@ -1,7 +1,7 @@
 ---
 title: "Clickfix/FakeCaptcha Campaigns: Delivering Lumma Stealer"
-date: 2025-05-03 00:00:00 +0800
-categories: [Investigations]
+date: 2025-05-02 00:00:00 +0800
+categories: [Articles]
 tags: [Cyber Stuff]
 ---
 
@@ -14,11 +14,9 @@ For the official company blog post, check it out here: [Triskele Labs – ClickF
 
 ---
 
-Triskele Labs has observed a significant increase in cybercriminals adopting fake CAPTCHA pages as a social engineering tactic to distribute malware, particularly information stealers such as Lumma St[...]
+Triskele Labs has observed a significant increase in cybercriminals adopting fake CAPTCHA pages as a social engineering tactic to distribute malware, particularly information stealers such as Lumma Stealer.
 
-Throughout 2025, we have seen a sharp rise in malvertising campaigns and the exploitation of legitimate websites and advertisements to expand the reach and impact of these attacks. A malvertising camp[...]
-
-Triskele Labs' Digital Forensics and Incident Response (DFIR) team has responded to multiple ransomware and Business Email Compromise (BEC) incidents linked to this attack vector. Our Security Operati[...]
+Throughout 2025, we have seen a sharp rise in malvertising campaigns and the exploitation of legitimate websites and advertisements to expand the reach and impact of these attacks. Triskele Labs' Digital Forensics and Incident Response (DFIR) team has responded to multiple ransomware and Business Email Compromise (BEC) incidents linked to this attack vector. Our Security Operations Centre detects and investigates these campaigns.
 
 In this blog post, we break down how attackers carry out fake CAPTCHA campaigns, how our team detects them, and the steps we take in response.
 
@@ -26,17 +24,17 @@ In this blog post, we break down how attackers carry out fake CAPTCHA campaigns,
 
 ## Attack Flow
 
-The flowchart below illustrates the attack chain of a fake CAPTCHA malvertising campaign, where users are tricked into executing a malicious command. This leads to the download and execution of obfusc[...]
+The flowchart below illustrates the attack chain of a fake CAPTCHA malvertising campaign, where users are tricked into executing a malicious command. This leads to the download and execution of obfuscated malware.
 
 *[ClickFix - Fake CAPTCHA Attack Flow]*
 
 ### Initial Access Vectors
 
-Attackers primarily use malvertising techniques, embedding malicious advertisements or exploiting compromised legitimate websites to redirect unsuspecting users to fraudulent CAPTCHA pages. These dece[...]
+Attackers primarily use malvertising techniques, embedding malicious advertisements or exploiting compromised legitimate websites to redirect unsuspecting users to fraudulent CAPTCHA pages. These deceptive pages instruct users to complete a fake verification process.
 
-Other tactics include exploiting browser vulnerabilities using JavaScript to trigger unauthorised downloads, intrusive push notifications, or phishing emails containing malicious links that direct use[...]
+Other tactics include exploiting browser vulnerabilities using JavaScript to trigger unauthorised downloads, intrusive push notifications, or phishing emails containing malicious links that direct users to the fake CAPTCHA pages.
 
-The image below demonstrates how the fake CAPTCHA campaign deceives users by instructing them to execute a malicious command via the Windows Run dialog, disguised as CAPTCHA verification, which initia[...]
+The image below demonstrates how the fake CAPTCHA campaign deceives users by instructing them to execute a malicious command via the Windows Run dialog, disguised as CAPTCHA verification.
 
 *[Image: reCAPTCHA — Requesting user to run commands as part of CAPTCHA verification]*
 
@@ -44,7 +42,7 @@ The image below demonstrates how the fake CAPTCHA campaign deceives users by ins
 
 ## Detection Methods
 
-At Triskele Labs, we detect these attacks using several methods; most originating from SIEM and XDR/EDR alerts, supported by custom detection rules designed to identify suspicious commands and process[...]
+At Triskele Labs, we detect these attacks using several methods; most originating from SIEM and XDR/EDR alerts, supported by custom detection rules designed to identify suspicious commands and processes.
 
 - **Behavioural analysis and anomaly detection**
   Monitoring user activity for unusual behaviour, such as executing suspicious commands or downloading unknown files.
@@ -62,10 +60,10 @@ At Triskele Labs, we detect these attacks using several methods; most originatin
 When an alert of this nature is triggered, the following steps illustrate how Triskele Labs validates the authenticity of the observed behaviour:
 
 1. **Script analysis**
-   Investigating scripts for signs of obfuscation, encoding, or unusual execution methods. Where the command's safety is unclear, sandbox tools are used to assess behaviour, including network communic[...]
+   Investigating scripts for signs of obfuscation, encoding, or unusual execution methods. Where the command's safety is unclear, sandbox tools are used to assess behaviour, including network communications.
 
 2. **Contextual validation**
-   Reviewing technical details to determine whether the activity is expected based on the user's role. For instance, users in payroll are far less likely to run advanced commands compared to IT person[...]
+   Reviewing technical details to determine whether the activity is expected based on the user's role. For instance, users in payroll are far less likely to run advanced commands compared to IT personnel.
 
 ---
 
