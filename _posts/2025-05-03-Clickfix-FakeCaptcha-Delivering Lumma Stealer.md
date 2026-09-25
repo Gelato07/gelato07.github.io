@@ -40,6 +40,8 @@ The image below demonstrates how the fake CAPTCHA campaign deceives users by ins
 
 *[Image: reCAPTCHA — Requesting user to run commands as part of CAPTCHA verification]*
 
+![reCAPTCHA — Requesting user to run commands as part of CAPTCHA verification](https://www.triskelelabs.com/hs-fs/hubfs/recaptcha.webp?width=728&height=380&name=recaptcha.webp)
+
 ---
 
 ## Detection Methods
