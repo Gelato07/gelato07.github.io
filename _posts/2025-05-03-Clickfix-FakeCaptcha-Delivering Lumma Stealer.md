@@ -1,5 +1,5 @@
 ---
-title: Coming Soon
+title: Clickfix/FakeCaptcha Delivering Lumma Stealer.md
 date: 2025-05-03 00:00:00 +0800
 categories: [Investigations]
 tags: [Cyber Stuff]
