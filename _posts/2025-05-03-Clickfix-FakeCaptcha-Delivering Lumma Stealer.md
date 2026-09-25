@@ -10,6 +10,10 @@ tags: [Cyber Stuff]
 
 ---
 
+For the official company blog post, check it out here: [Triskele Labs – ClickFix Malware: Fake CAPTCHA Malware Campaign Overview](https://www.triskelelabs.com/clickfix-malware-fake-captcha-malware-campaign-overview)
+
+---
+
 Triskele Labs has observed a significant increase in cybercriminals adopting fake CAPTCHA pages as a social engineering tactic to distribute malware, particularly information stealers such as Lumma St[...]
 
 Throughout 2025, we have seen a sharp rise in malvertising campaigns and the exploitation of legitimate websites and advertisements to expand the reach and impact of these attacks. A malvertising camp[...]
