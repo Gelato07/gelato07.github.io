@@ -43,16 +43,16 @@ w0Vl7TOF0T3zd4v7VFrzBX84JejSIapRMQCOik7rmLLS4XszXeRT7fSs27LpI5xeIb/oG8WczxrdsIq7
 ### Deobfuscation Results
 
 Analysis of the scripts identified communication with the following suspected command-and-control (C2) endpoint:
-
 <pre><code>
 hxxps://urjmovmstbtkamj[.]top/1.php?s=527
 </code></pre>
 
-A second request was also observed at:
 
+A second request was also observed at:
 <pre><code>
 hxxp://urjmovmstbtkamj[.]top/dfql2whrag.php?id=$env:computername&key=snrljndkqk&s=527
 </code></pre>
+
 
 This second request appears to collect host information, including the computer name. The parameters may indicate the following:
 
