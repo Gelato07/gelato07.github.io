@@ -28,7 +28,7 @@ Wrote a case study breaking down FakeCaptcha / ClickFix attacks, covering detect
 
 [Link to Article](https://www.linkedin.com/safety/go/?url=https%3A%2F%2Fwww.triskelelabs.com%2Fclickfix-malware-fake-captcha-malware-campaign-overview&urlhash=8dV8&mt=HHLOna3Cj7e6OIYyjmrFRsstf5igcjfJc_CH68-aj3OSJS6qDGHZ-731pTE_6kvkfwclZhd11AJX9wdf0eJVQD4lx3YrgjTdQ4DRx9D-EuDjd8kWcg4V6j5SFA&isSdui=true&lipi=urn%3Ali%3Apage%3Ad_flagship3_detail_base%3BIT4QH0nxTdWXb5ZmLgIunA%3D%3D)
 
-## Volunteering
+## Competitions
 
 ### WorldSkills Lyon 2024, International Competitor
 
@@ -51,7 +51,7 @@ Lachlan co-presented with Steve Simpson at a CASSA (Computing and Security Stude
 
 ### International WorldSkills Competitor — Public CTF Prep
 
-Over three days (8:00am to 3:30pm), Lachlan and his teammate completed a series of CTF challenges in front of the public, using the event to prepare for their international cybersecurity competition in Lyon, France.
+Over three days from 8:00am to 3:30pm at the Perth Convention and Exhibition Centre, Lachlan and his teammate Kai completed a series of CTF challenges to prepare for their International Cybersecurity competition in Lyon, France. While solving these challenges, their live investigations were displayed on a big screen at the Convention Centre where onlookers watch them solve these cyber challenges
 
 ### International WorldSkills Competitor — Blue Team Global Skills Competition
 
