@@ -15,13 +15,14 @@ Day to day, he leads incidents through to closure, works alongside detection eng
 
 ## Certifications & Training
 
+- National WorldSkills Competition Winner in Cybersecurity (Australia, Victoria | 2023) - 1/10, Cybersecurity (Team WA)
+- International WorldSkills Competitor in Cybersecurity (France, Lyon | 2024) - 13/20, Cyber Security (Team Australia)
 - CompTIA Cybersecurity Analyst (CySA+) - 2026
 - Investigating Windows Memory (Gold) - 13Cubed
 - Investigating Windows Endpoints (Gold) - 13Cubed
 - Blue Team Level 1 (BTL1) - Security Blue Team
 - ICS 300 - CISA
-- International WorldSkills Competition (Lyon 2024) - 13/20, Cyber Security (Team Australia)
-
+  
 ## Case Studies / Articles
 
 Wrote a case study breaking down FakeCaptcha / ClickFix attacks, covering detection, the psychological manipulation behind them, and how the malware delivery chain actually executes delivering Lumma Stealer.
