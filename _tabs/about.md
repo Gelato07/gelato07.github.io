@@ -43,11 +43,11 @@ The competition ran across four days, each covering a different cybersecurity di
 
 ### PECAN+ OSINT Presentation — Co-Presenter alongside Steve Simpson
 
-At PECANCTF+, Lachlan co-presented with Steve Simpson, explaining OSINT fundamentals to Year 9 to 12 students, covering what OSINT is, its real-world power, and how it's applied across different scenarios.
+At PECANCTF+, Lachlan co-presented with [Steve Simpson](https://www.linkedin.com/in/stevensimpson/) who is a very well known cyber expert in Perth, Western Australia with over 40 years in the industry. They both guided the students in explaining OSINT fundamentals to Year 9 to 12 students, covering what OSINT is, its real-world power, and how it's applied across different scenarios.
 
 ### CASSA Event — Co-Presenting alongside Steve Simpson
 
-Lachlan co-presented with Steve Simpson at a CASSA event, sharing his story of entering the cybersecurity industry and offering tips for improving students' chances as candidates when applying for cybersecurity roles.
+Lachlan co-presented with Steve Simpson at a CASSA (Computing and Security Student Association) event, sharing both of their stories involving their journeys entering the cybersecurity industry and offering tips for improving students' chances as candidates when applying for cybersecurity roles.
 
 ### International WorldSkills Competitor — Public CTF Prep
 
