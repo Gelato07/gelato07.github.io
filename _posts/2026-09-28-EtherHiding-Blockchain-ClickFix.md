@@ -50,13 +50,13 @@ The blockchain that the attackers use also exposes them, since everything on it 
 
 These are the kinds of public gateways that anyone can send requests to, with no account needed. A few examples:
 
-| Blockchain | Example public RPC endpoint |
-| --- | --- |
-| BNB Smart Chain | `hxxps://bsc-dataseed[.]binance[.]org` |
+| Blockchain      | Example public RPC endpoint              |
+| --------------- | ---------------------------------------- |
+| BNB Smart Chain | `hxxps://bsc-dataseed[.]binance[.]org`   |
 | BNB Smart Chain | `hxxps://bsc-dataseed1[.]bnbchain[.]org` |
-| Ethereum | `hxxps://eth[.]llamarpc[.]com` |
-| Ethereum | `hxxps://rpc[.]ankr[.]com/eth` |
-| Polygon | `hxxps://polygon-rpc[.]com` |
+| Ethereum        | `hxxps://eth[.]llamarpc[.]com`           |
+| Ethereum        | `hxxps://rpc[.]ankr[.]com/eth`           |
+| Polygon         | `hxxps://polygon-rpc[.]com`              |
 
 RPC endpoints change over time, so check that these are still current before relying on them. The original ClearFake/EtherHiding campaign was reported to use Binance's BSC endpoints.
 
@@ -68,7 +68,7 @@ RPC endpoints change over time, so check that these are still current before rel
 
 The attacker has already compromised the website by inserting malicious code, so when someone opens the page, their browser runs it automatically. The visitor sees a normal Mexican restaurant website and has no idea that malicious scripts are running in the background.
 
-![5fcc2b5b983ba9a8b68b3214a79c9961.png](../_resources/5fcc2b5b983ba9a8b68b3214a79c9961-1.png)
+![5fcc2b5b983ba9a8b68b3214a79c9961.png](/assets/img/etherhiding/5fcc2b5b983ba9a8b68b3214a79c9961-1.png)
 
 ### 2\. RPC Endpoints Invoked by Two Obfuscated JS Scripts | `Stage 1`
 
@@ -82,15 +82,15 @@ This first script is the resolver/loader stage. It contains no attack payload it
 
 **Raw Page Response**
 
-![2d1ed95430c6b3eea69cec5c1ba798d9.png](../_resources/2d1ed95430c6b3eea69cec5c1ba798d9-1.png)
+![2d1ed95430c6b3eea69cec5c1ba798d9.png](/assets/img/etherhiding/2d1ed95430c6b3eea69cec5c1ba798d9-1.png)
 
 **Obfuscated**
 
-![e95eed4e452edb637e0398782522b1c1.png](../_resources/e95eed4e452edb637e0398782522b1c1-1.png)
+![e95eed4e452edb637e0398782522b1c1.png](/assets/img/etherhiding/e95eed4e452edb637e0398782522b1c1-1.png)
 
 **Deobfuscated**
 
-![853939b9bf4492230a881644ebea396d.png](../_resources/853939b9bf4492230a881644ebea396d-1.png)
+![853939b9bf4492230a881644ebea396d.png](/assets/img/etherhiding/853939b9bf4492230a881644ebea396d-1.png)
 
 It checks whether you're a real Windows user, then asks the Polygon smart contract for the attacker's current server address, decrypts that address, and injects a second-stage script (`/js/all.min.js?m=1`) from it into the page. The blockchain is used as a *dead drop* so attackers can swap servers without touching the hacked site.
 
@@ -102,13 +102,13 @@ The second script asks the Polygon smart contract `0x08207B087F61d7e95E441E15fd6
 
 **Raw Page Response**
 
-![08f4fbdd661575473b3d2ded5c98f2e1.png](../_resources/08f4fbdd661575473b3d2ded5c98f2e1-1.png)
+![08f4fbdd661575473b3d2ded5c98f2e1.png](/assets/img/etherhiding/08f4fbdd661575473b3d2ded5c98f2e1-1.png)
 
-![028fe7e4786f325cdb08c5e00ef43eb8.png](../_resources/028fe7e4786f325cdb08c5e00ef43eb8-1.png)
+![028fe7e4786f325cdb08c5e00ef43eb8.png](/assets/img/etherhiding/028fe7e4786f325cdb08c5e00ef43eb8-1.png)
 
 **Obfuscated / Deobfuscated**
 
-![bc5630200016e4a7b17f2539799da48e.png](../_resources/bc5630200016e4a7b17f2539799da48e-1.png)
+![bc5630200016e4a7b17f2539799da48e.png](/assets/img/etherhiding/bc5630200016e4a7b17f2539799da48e-1.png)
 
 From observing the second script, three non-obvious things caught my eye: the `allow="clipboard-write"` attribute and the two cookies `_cf_verified` and `_wp_perf_ok`.
 
@@ -146,10 +146,10 @@ id:         1
 
 These `eth_call` requests went to the following RPC endpoints, as they were the only ones that replied with stored data:
 
-- `hxxps[://]polygon[.]drpc[.]org/` — 2 calls
+- `hxxps[://]polygon[.]drpc[.]org/` - 2 calls
 - `hxxps[://]polygon-bor-rpc[.]publicnode[.]com/` — 1 call
 
-![adff5d42af531e278cdca4e5d8683867.png](../_resources/adff5d42af531e278cdca4e5d8683867-1.png)
+![adff5d42af531e278cdca4e5d8683867.png](/assets/img/etherhiding/adff5d42af531e278cdca4e5d8683867-1.png)
 
 Looking at the response timings, we can observe the chronological order of the contract requests:
 
@@ -172,7 +172,7 @@ result: 0x0000000000000000000000000000000000000000000000000000000000000020000000
 
 **Hex decoded:** `deer[.]albaikmenuonline[.]com`
 
-![349b3b75862b179c5922c2f0d2457a38.png](../_resources/349b3b75862b179c5922c2f0d2457a38-1.png)
+![349b3b75862b179c5922c2f0d2457a38.png](/assets/img/etherhiding/349b3b75862b179c5922c2f0d2457a38-1.png)
 
 **Response 2**
 
@@ -204,7 +204,7 @@ result: 0x0000000000000000000000000000000000000000000000000000000000000020000000
 _IokImu3krjmsX7ZehQSeWrUB9_Ns2wyqRs9u2F_hd3vmjcuF4V2xOrRAjwZlZ4bviqV5sDGgM_MDlge0E3T6b9Sc8hywM6o
 ```
 
-![57611d87f473d76b2724b1ef09a8e9ed.png](../_resources/57611d87f473d76b2724b1ef09a8e9ed-1.png)
+![57611d87f473d76b2724b1ef09a8e9ed.png](/assets/img/etherhiding/57611d87f473d76b2724b1ef09a8e9ed-1.png)
 
 ### RPC Endpoint Response Findings and Analysis
 
@@ -215,9 +215,9 @@ Observing the requests involving this newly discovered domain, we can see:
 - An API **POST** request to the endpoint `beacon`, which looks to be a heartbeat.
 - An API **GET** request to the endpoint `api`, an OS check to see whether you match their target (in this case, Windows users).
 
-![0902af25bf2c7686dba939650366d0bf.png](../_resources/0902af25bf2c7686dba939650366d0bf-1.png)
+![0902af25bf2c7686dba939650366d0bf.png](/assets/img/etherhiding/0902af25bf2c7686dba939650366d0bf-1.png)
 
-![ca8d299ad2a712438aeaaa49dd7e0322.png](../_resources/ca8d299ad2a712438aeaaa49dd7e0322-1.png)
+![ca8d299ad2a712438aeaaa49dd7e0322.png](/assets/img/etherhiding/ca8d299ad2a712438aeaaa49dd7e0322-1.png)
 
 **API GET response rundown (threat actor's targeting config):**
 
@@ -227,27 +227,27 @@ Observing the requests involving this newly discovered domain, we can see:
 
 **Response in plain text (from JSON):**
 
-| Setting | Value |
-| --- | --- |
-| Enabled | Yes |
-| Set cookies | Yes |
-| Cookie version | 1   |
-| Skip CAPTCHA | No  |
-| Show to Windows users | Yes |
-| Show to Mac users | No  |
-| Show to Linux users | No  |
-| Show to Android users | No  |
-| Show to iPhone/iPad users | No  |
-| Windows landing page | `/landing/windows.html?_k=845c7760b59deb18ae395d44419e0f1e2a2f` |
-| Mac landing page | `/landing/mac.html?_k=845c7760b59deb18ae395d44419e0f1e2a2f` |
-| Linux landing page | `/landing/windows.html?_k=845c7760b59deb18ae395d44419e0f1e2a2f` |
-| Android landing page | `/landing/android.html?_k=845c7760b59deb18ae395d44419e0f1e2a2f` |
-| iOS landing page | `/landing/ios.html?_k=845c7760b59deb18ae395d44419e0f1e2a2f` |
-| Windows rules | None |
-| Mac rules | None |
-| Linux rules | None |
-| Android rules | None |
-| iOS rules | One rule (switched off) for iOS 19 and below, using `/landing/ios.html?_k=845c7760b59deb18ae395d44419e0f1e2a2f` |
+| Setting                   | Value                                                                                                           |
+| ------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| Enabled                   | Yes                                                                                                             |
+| Set cookies               | Yes                                                                                                             |
+| Cookie version            | 1                                                                                                               |
+| Skip CAPTCHA              | No                                                                                                              |
+| Show to Windows users     | Yes                                                                                                             |
+| Show to Mac users         | No                                                                                                              |
+| Show to Linux users       | No                                                                                                              |
+| Show to Android users     | No                                                                                                              |
+| Show to iPhone/iPad users | No                                                                                                              |
+| Windows landing page      | `/landing/windows.html?_k=845c7760b59deb18ae395d44419e0f1e2a2f`                                                 |
+| Mac landing page          | `/landing/mac.html?_k=845c7760b59deb18ae395d44419e0f1e2a2f`                                                     |
+| Linux landing page        | `/landing/windows.html?_k=845c7760b59deb18ae395d44419e0f1e2a2f`                                                 |
+| Android landing page      | `/landing/android.html?_k=845c7760b59deb18ae395d44419e0f1e2a2f`                                                 |
+| iOS landing page          | `/landing/ios.html?_k=845c7760b59deb18ae395d44419e0f1e2a2f`                                                     |
+| Windows rules             | None                                                                                                            |
+| Mac rules                 | None                                                                                                            |
+| Linux rules               | None                                                                                                            |
+| Android rules             | None                                                                                                            |
+| iOS rules                 | One rule (switched off) for iOS 19 and below, using `/landing/ios.html?_k=845c7760b59deb18ae395d44419e0f1e2a2f` |
 
 * * *
 
@@ -264,7 +264,7 @@ Claude decrypted it by calculating the combined keystream from the key `JtjOz1KW
 5.  **From Base64** decodes using the URL-safe alphabet (`-` and `_`).
 6.  **XOR** applies the calculated keystream.
 
-![47e173383b660e40a6da38b6287f1143.png](../_resources/47e173383b660e40a6da38b6287f1143-1.png)
+![47e173383b660e40a6da38b6287f1143.png](/assets/img/etherhiding/47e173383b660e40a6da38b6287f1143-1.png)
 
 After decoding, we discovered three new domains that appear to be further attacker servers hosting the next stage:
 
@@ -278,15 +278,15 @@ After decoding, we discovered three new domains that appear to be further attack
 
 Looking back at the URLScan results, we can see one of the same domains serving the JS script `all.min.js`.
 
-![9700d759c447ea4ea1a2ddd03e066d44.png](../_resources/9700d759c447ea4ea1a2ddd03e066d44.png)
+![9700d759c447ea4ea1a2ddd03e066d44.png](/assets/img/etherhiding/9700d759c447ea4ea1a2ddd03e066d44.png)
 
 Going back to the first script, we can also see that exact same JS file referenced, back when we didn't know what it did.
 
 **Bottom of Script 1**
 
-![0f56260305e1e813b5ec821b19d640ca.png](../_resources/0f56260305e1e813b5ec821b19d640ca.png)
+![0f56260305e1e813b5ec821b19d640ca.png](/assets/img/etherhiding/0f56260305e1e813b5ec821b19d640ca.png)
 
-![9a7a9a66c2a25b51f59f6d0080e2bb16.png](../_resources/9a7a9a66c2a25b51f59f6d0080e2bb16.png)
+![9a7a9a66c2a25b51f59f6d0080e2bb16.png](/assets/img/etherhiding/9a7a9a66c2a25b51f59f6d0080e2bb16.png)
 
 The decoded value is one or more semicolon-separated (`;`) domains. The script appends `/js/all.min.js?m=1` to each domain and injects them as deferred `<script>` tags. This tells the browser to **download the JavaScript file in the background** and **execute it only after the page has been fully parsed.**
 
@@ -302,7 +302,7 @@ It then tries every URL with a 3-second timeout, retries with a 6-second timeout
 
 From the corroboration above, we can see the C2 servers being requested with the same response size and containing the same data:
 
-![0f6a91c992960f81adbeee694c8d8bb4.png](../_resources/0f6a91c992960f81adbeee694c8d8bb4.png)
+![0f6a91c992960f81adbeee694c8d8bb4.png](/assets/img/etherhiding/0f6a91c992960f81adbeee694c8d8bb4.png)
 
 Lo and behold... another obfuscated JS script, of course -\_-
 
@@ -310,11 +310,11 @@ This makes it the third and final script.
 
 #### Script 3
 
-![cbc1d583ef3b9cc66ac3f223fae0b150.png](../_resources/cbc1d583ef3b9cc66ac3f223fae0b150.png)
+![cbc1d583ef3b9cc66ac3f223fae0b150.png](/assets/img/etherhiding/cbc1d583ef3b9cc66ac3f223fae0b150.png)
 
 **Deobfuscated**
 
-![5d9cdb8b704d12b0db032a12b7abf5fd.png](../_resources/5d9cdb8b704d12b0db032a12b7abf5fd.png)
+![5d9cdb8b704d12b0db032a12b7abf5fd.png](/assets/img/etherhiding/5d9cdb8b704d12b0db032a12b7abf5fd.png)
 
 After analysing and deconstructing Script 3, we identified the following steps:
 
@@ -335,25 +335,25 @@ After analysing and deconstructing Script 3, we identified the following steps:
 
 This is how EtherHiding is used to deploy malvertising techniques like ClickFix/FakeCaptcha.
 
-| Type | Value |
-| --- | --- |
-| C2 domain | `netweblabs[.]com` |
-| Stage-2 URL | `hxxps[://]netweblabs[.]com/js/all.min.js?m=1` |
+| Type                              | Value                                                                                           |
+| --------------------------------- | ----------------------------------------------------------------------------------------------- |
+| C2 domain                         | `netweblabs[.]com`                                                                              |
+| Stage-2 URL                       | `hxxps[://]netweblabs[.]com/js/all.min.js?m=1`                                                  |
 | Endpoint: fingerprint and payload | `/first_allow_host?callback=&ua=&platform=&cpu=&ram=&origin=&language=&browser=&method=&layer=` |
-| Endpoint: polling | `/check_allow_host?callback=&id=` |
-| Endpoint: telemetry | `/click_download`, `/click_continue`, `/click_win` (all `?callback=&id=`) |
+| Endpoint: polling                 | `/check_allow_host?callback=&id=`                                                               |
+| Endpoint: telemetry               | `/click_download`, `/click_continue`, `/click_win` (all `?callback=&id=`)                       |
 
 ### Screenshots from Dynamic Analysis
 
-![64e63ae7aa54c4fc3f92d4bd6fb8343d.png](../_resources/64e63ae7aa54c4fc3f92d4bd6fb8343d.png)
+![64e63ae7aa54c4fc3f92d4bd6fb8343d.png](/assets/img/etherhiding/64e63ae7aa54c4fc3f92d4bd6fb8343d.png)
 
 **Image 1:** The polling requests come from functions `_0x8f_0x1cb` and `_0x5_0xe4b` in `all.min.js?m=1`, matching the deobfuscated code.
 
-![527f8a57824fd51d421af7459d5be02b.png](../_resources/527f8a57824fd51d421af7459d5be02b.png)
+![527f8a57824fd51d421af7459d5be02b.png](/assets/img/etherhiding/527f8a57824fd51d421af7459d5be02b.png)
 
 **Image 2:** The fake Cloudflare CAPTCHA reports the checkbox click to the C2 via `/click_continue` (victim ID `27431`, `45.86.230[.]47`).
 
-![b057c197819c39d5a1c01a6b15c30d06.png](../_resources/b057c197819c39d5a1c01a6b15c30d06.png)
+![b057c197819c39d5a1c01a6b15c30d06.png](/assets/img/etherhiding/b057c197819c39d5a1c01a6b15c30d06.png)
 
 **Image 3:** The page polls `/check_allow_host` every 5 seconds, waiting for the pasted command to run.
 
@@ -361,7 +361,7 @@ This is how EtherHiding is used to deploy malvertising techniques like ClickFix/
 
 ## Bonus: Quick ClickFix Command Analysis
 
-![aed775ec5b6ef7b902c428972dbfbbf9.png](../_resources/aed775ec5b6ef7b902c428972dbfbbf9.png)
+![aed775ec5b6ef7b902c428972dbfbbf9.png](/assets/img/etherhiding/aed775ec5b6ef7b902c428972dbfbbf9.png)
 
 ### ClickFix Command Breakdown
 
@@ -371,18 +371,18 @@ This is how EtherHiding is used to deploy malvertising techniques like ClickFix/
 4.  Waits 4–12 seconds, then runs `1.bat`, which launches `upnpcont.exe`, the actual malware.
 5.  The malware (Most commonly Information Stealers) then carries out the threat actor's operations to achieve their goal.
 
-| Type | Value |
-| --- | --- |
-| Payload URL | `hxxps[://]netweblabs[.]com/get_verify?i=27431&m=1` |
-| Drop folder | `C:\Windows\Temp\f9804df4384d34e0\` |
-| Files | `1.bat`, `upnpcont.exe` (plus any other files in the ZIP) |
-| Instance / Ray ID | `f9804df4384d34e0` |
-| Victim ID | `27431` |
+| Type              | Value                                                     |
+| ----------------- | --------------------------------------------------------- |
+| Payload URL       | `hxxps[://]netweblabs[.]com/get_verify?i=27431&m=1`       |
+| Drop folder       | `C:\Windows\Temp\f9804df4384d34e0\`                       |
+| Files             | `1.bat`, `upnpcont.exe` (plus any other files in the ZIP) |
+| Instance / Ray ID | `f9804df4384d34e0`                                        |
+| Victim ID         | `27431`                                                   |
 
 I'd like to dig into the third stage of the attack, but that will have to be another post involving malware analysis.
 
   
-Thanks for reading :) 
+Thanks for reading :) 
 
 &nbsp;
 
