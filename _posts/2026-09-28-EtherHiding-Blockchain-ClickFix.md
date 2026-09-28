@@ -383,8 +383,44 @@ The ClickFix/Fake Captcha eventually loads after the Etherhiding C2 via the Poly
 
 I'd like to dig into the third stage of the attack, but that will have to be another post involving malware analysis.
 
-  
-Thanks for reading :) 
+
+## Summary of Killchain
+
+1. Initial access: A compromised restaurant website silently runs injected scripts in the visitor's browser, with no visible sign of attack.
+2. Dead-drop resolution: The scripts query Polygon smart contracts to fetch the attacker's current servers, letting infrastructure rotate without touching the hacked site.
+3. Blockchain retrieval: eth_call requests to public RPC endpoints return the stored data, blending malicious lookups into legitimate-looking blockchain traffic.
+4. Infrastructure reveal: The decoded responses expose a targeting server and three Stage 2 C2 domains, confirming a modular kit that currently targets Windows but is ready for other platforms.
+5. Payload delivery: A fake Cloudflare CAPTCHA tricks the victim into pasting and running a PowerShell command, which downloads andm malware from C:\Windows\Temp.
+
+
+### KQL Hunt Query
+
+`let RPCEndpoints = dynamic([
+    // Polygon
+    "polygon-rpc.com","polygon.drpc.org","polygon-bor-rpc.publicnode.com","polygon.llamarpc.com",
+    "polygon-mainnet.infura.io","polygon-mainnet.g.alchemy.com","rpc-mainnet.matic.network",
+    // BNB Smart Chain (mainnet and testnet)
+    "bsc-dataseed.binance.org","bsc-dataseed1.binance.org","bsc-dataseed2.binance.org",
+    "bsc-dataseed.bnbchain.org","bsc-rpc.publicnode.com","bsc.drpc.org",
+    "data-seed-prebsc-1-s1.bnbchain.org","data-seed-prebsc-2-s1.bnbchain.org","bsc-testnet.publicnode.com",
+    // Ethereum
+    "mainnet.infura.io","eth-mainnet.g.alchemy.com","cloudflare-eth.com","eth.llamarpc.com",
+    "ethereum-rpc.publicnode.com","eth.drpc.org","rpc.flashbots.net",
+    // TRON
+    "api.trongrid.io","api.shasta.trongrid.io","api.nileex.io",
+    // Multi-chain providers
+    "rpc.ankr.com","1rpc.io","blastapi.io","quiknode.pro","chainstack.com","getblock.io","nodereal.io"
+]);
+DeviceNetworkEvents
+| where Timestamp > ago(7d)
+| where RemoteUrl has_any (RPCEndpoints)
+| summarize FirstSeen=min(Timestamp), LastSeen=max(Timestamp), Hits=count(),
+            URLs=make_set(RemoteUrl), RemoteIPs=make_set(RemoteIP)
+    by DeviceName
+| sort by Hits desc`
+
+
+Thanks for reading, 
 
 &nbsp;
 
