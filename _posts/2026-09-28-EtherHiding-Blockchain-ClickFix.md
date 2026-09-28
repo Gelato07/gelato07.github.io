@@ -3,7 +3,7 @@ title: "From Blockchain to Clipboard: Dissecting an EtherHiding ClickFix Attack"
 date: 2026-09-28 00:00:00 +0800
 categories: ["Byte-Sized Deep Dives"]
 tags: [Cyber Stuff]
-description: "A walkthrough of a real EtherHiding campaign, tracing how attackers use Polygon smart contracts as a dead drop to serve a ClickFix fake CAPTCHA and deliver an information stealer."
+description: "A walkthrough of a real EtherHiding campaign, tracing how attackers use Polygon smart contracts as a dead drop to serve a ClickFix/FakeCAPTCHA and deliver information stealers."
 published: true
 ---
 
