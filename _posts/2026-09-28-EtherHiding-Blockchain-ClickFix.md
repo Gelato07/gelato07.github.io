@@ -154,8 +154,8 @@ These `eth_call` requests went to the following RPC endpoints, as they were the 
 Looking at the response timings, we can observe the chronological order of the contract requests:
 
 1.  `polygon-bor-rpc[.]publicnode[.]com` (231 bytes | 133 ms)
-2.  `polygon[.]drpc[.]org` (230 bytes | 204 ms)
-3.  `polygon[.]drpc[.]org` (358 bytes | 214 ms)
+2.  `polygon[.]drpc[.]org` (230 bytes / 204 ms)
+3.  `polygon[.]drpc[.]org` (358 bytes / 214 ms)
 
 ### 4\. RPC Endpoint Responses from `eth_call` (Decoded and Delivered) | `Stage 1`
 
@@ -329,7 +329,7 @@ After analysing and deconstructing Script 3, we identified the following steps:
 3.  **Checkbox click, the core of the attack.** Clicking the checkbox:
     - Copies the malicious command to the clipboard (`navigator.clipboard.writeText`, with an `execCommand('copy')` fallback).
     - Enables anti-analysis measures and reports `/click_continue`.
-    - After 2 seconds, expands the widget with instructions: **Win+X** → **I** (Terminal/PowerShell) → **Ctrl+V** → **Enter**.
+    - After 2 seconds, expands the widget with instructions: **Win+X** -> **I** (Terminal/PowerShell) -> **Ctrl+V** -> **Enter**.
     - Logs `/click_win` to the C2 whenever the Windows key is pressed.
 4.  **Waiting for execution.** Every 5 seconds it polls `/check_allow_host?id=`. Once the server reports `allow: false`, most likely because the pasted command has beaconed back with the victim ID, it hides the overlay and reloads the page.
 
