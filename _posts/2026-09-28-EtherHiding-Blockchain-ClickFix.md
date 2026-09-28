@@ -383,6 +383,7 @@ The ClickFix/Fake Captcha eventually loads after the Etherhiding C2 via the Poly
 
 I'd like to dig into the third stage of the attack, but that will have to be another post involving malware analysis.
 
+<<<<<<< HEAD
 
 ## Summary of Killchain
 
@@ -394,6 +395,20 @@ I'd like to dig into the third stage of the attack, but that will have to be ano
 
 
 ### KQL Hunt Query
+=======
+### Summary of Killchain
+
+1. **Initial access**: A compromised restaurant website silently runs injected scripts in the visitor's browser, with no visible sign of attack.
+2. **Dead-drop resolution**: The scripts query Polygon smart contracts to fetch the attacker's current servers, letting infrastructure rotate without touching the hacked site.
+3. **Blockchain retrieval**: eth_call requests to public RPC endpoints return the stored data, blending malicious lookups into legitimate-looking blockchain traffic.
+4. **Infrastructure reveal**: The decoded responses expose a targeting server and three Stage 2 C2 domains, confirming a modular kit that currently targets Windows but is ready for other platforms.
+5. **Payload delivery**: A fake Cloudflare CAPTCHA tricks the victim into pasting and running a PowerShell command, which downloads andm malware from C:\Windows\Temp.
+
+* * * 
+
+KQL Hunt Query
+
+>>>>>>> 17770f5 (addition)
 
 `let RPCEndpoints = dynamic([
     // Polygon
@@ -419,8 +434,13 @@ DeviceNetworkEvents
     by DeviceName
 | sort by Hits desc`
 
+<<<<<<< HEAD
 
 Thanks for reading, 
+=======
+  
+Thanks for reading :) 
+>>>>>>> 17770f5 (addition)
 
 &nbsp;
 
@@ -442,11 +462,11 @@ Thanks for reading,
 1.  **Obfuscator.io Deobfuscator**  
     https://obf-io.deobfuscate.io  
     <br/>
-2.  **Cyberchef  
-    **https://gchq.github.io/CyberChef/  
+2.  **Cyberchef**
+    https://gchq.github.io/CyberChef/  
     <br/>Recipie Used:  
     
-    ```Chef
+    ```
     Find_/_Replace({'option':'Regex','string':'^0x'},'',true,false,true,false)
     From_Hex('None')
     Drop_bytes(0,64,false)
