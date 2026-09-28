@@ -82,11 +82,11 @@ This first script is the resolver/loader stage. It contains no attack payload it
 
 **Raw Page Response**
 
-![2d1ed95430c6b3eea69cec5c1ba798d9.png](/assets/img/etherhiding/2d1ed95430c6b3eea69cec5c1ba798d9-1.png)
+![2d1ed95430c6b3eea69cec5c1ba798d9.png](/assets/img/etherhiding/2d1ed95430c6b3eea69cec5c1ba798d9.png)
 
 **Obfuscated**
 
-![e95eed4e452edb637e0398782522b1c1.png](/assets/img/etherhiding/e95eed4e452edb637e0398782522b1c1-1.png)
+![e95eed4e452edb637e0398782522b1c1.png](/assets/img/etherhiding/e95eed4e452edb637e0398782522b1c1.png)
 
 **Deobfuscated**
 
@@ -102,9 +102,9 @@ The second script asks the Polygon smart contract `0x08207B087F61d7e95E441E15fd6
 
 **Raw Page Response**
 
-![08f4fbdd661575473b3d2ded5c98f2e1.png](/assets/img/etherhiding/08f4fbdd661575473b3d2ded5c98f2e1-1.png)
+![08f4fbdd661575473b3d2ded5c98f2e1.png](/assets/img/etherhiding/08f4fbdd661575473b3d2ded5c98f2e1.png)
 
-![028fe7e4786f325cdb08c5e00ef43eb8.png](/assets/img/etherhiding/028fe7e4786f325cdb08c5e00ef43eb8-1.png)
+![028fe7e4786f325cdb08c5e00ef43eb8.png](/assets/img/etherhiding/028fe7e4786f325cdb08c5e00ef43eb8.png)
 
 **Obfuscated / Deobfuscated**
 
@@ -147,7 +147,7 @@ id:         1
 These `eth_call` requests went to the following RPC endpoints, as they were the only ones that replied with stored data:
 
 - `hxxps[://]polygon[.]drpc[.]org/` - 2 calls
-- `hxxps[://]polygon-bor-rpc[.]publicnode[.]com/` — 1 call
+- `hxxps[://]polygon-bor-rpc[.]publicnode[.]com/` - 1 call
 
 ![adff5d42af531e278cdca4e5d8683867.png](/assets/img/etherhiding/adff5d42af531e278cdca4e5d8683867-1.png)
 
