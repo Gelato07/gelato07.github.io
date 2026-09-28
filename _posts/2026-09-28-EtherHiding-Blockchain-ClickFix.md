@@ -345,6 +345,8 @@ This is how EtherHiding is used to deploy malvertising techniques like ClickFix/
 
 ### Screenshots from Dynamic Analysis
 
+The ClickFix/Fake Captcha eventually loads after the Etherhiding C2 via the Polygon network finishes its contracts. This takes about 5 to 10 seconds.
+
 ![64e63ae7aa54c4fc3f92d4bd6fb8343d.png](/assets/img/etherhiding/64e63ae7aa54c4fc3f92d4bd6fb8343d.png)
 
 **Image 1:** The polling requests come from functions `_0x8f_0x1cb` and `_0x5_0xe4b` in `all.min.js?m=1`, matching the deobfuscated code.
