@@ -383,19 +383,6 @@ The ClickFix/Fake Captcha eventually loads after the Etherhiding C2 via the Poly
 
 I'd like to dig into the third stage of the attack, but that will have to be another post involving malware analysis.
 
-<<<<<<< HEAD
-
-## Summary of Killchain
-
-1. Initial access: A compromised restaurant website silently runs injected scripts in the visitor's browser, with no visible sign of attack.
-2. Dead-drop resolution: The scripts query Polygon smart contracts to fetch the attacker's current servers, letting infrastructure rotate without touching the hacked site.
-3. Blockchain retrieval: eth_call requests to public RPC endpoints return the stored data, blending malicious lookups into legitimate-looking blockchain traffic.
-4. Infrastructure reveal: The decoded responses expose a targeting server and three Stage 2 C2 domains, confirming a modular kit that currently targets Windows but is ready for other platforms.
-5. Payload delivery: A fake Cloudflare CAPTCHA tricks the victim into pasting and running a PowerShell command, which downloads andm malware from C:\Windows\Temp.
-
-
-### KQL Hunt Query
-=======
 ### Summary of Killchain
 
 1. **Initial access**: A compromised restaurant website silently runs injected scripts in the visitor's browser, with no visible sign of attack.
@@ -404,13 +391,68 @@ I'd like to dig into the third stage of the attack, but that will have to be ano
 4. **Infrastructure reveal**: The decoded responses expose a targeting server and three Stage 2 C2 domains, confirming a modular kit that currently targets Windows but is ready for other platforms.
 5. **Payload delivery**: A fake Cloudflare CAPTCHA tricks the victim into pasting and running a PowerShell command, which downloads andm malware from C:\Windows\Temp.
 
+
+Thanks for reading :) 
+
+Below i have provided KQL Queries and Detection Rules for Sentinel, MS Defender & Rapid7
+
 * * * 
 
-KQL Hunt Query
+<br/>
 
->>>>>>> 17770f5 (addition)
+### KQL Queries & Detection Rules (EtherHiding)
 
-`let RPCEndpoints = dynamic([
+
+### Sentinel 
+
+Paste the **Shared List** at the top of every rule, like i have done in the following rules below
+
+`Shared List`
+
+```text
+let RpcHosts = dynamic([
+    "infura.io", "g.alchemy.com", "rpc.ankr.com", "drpc.org", "publicnode.com",
+    "llamarpc.com", "1rpc.io", "quiknode.pro", "blastapi.io", "onfinality.io",
+    "pokt.network", "pocket.network", "nodies.app", "nodereal.io", "getblock.io",
+    "chainstack.com", "blockpi.network", "gateway.tenderly.co", "cloudflare-eth.com",
+    "binance.org", "bnbchain.org", "polygon-rpc.com", "rpc.polygon.community",
+    "mainnet.base.org", "arb1.arbitrum.io", "mainnet.optimism.io", "api.avax.network",
+    "trongrid.io", "aptoslabs.com",
+    "api.etherscan.io", "api.bscscan.com", "api.polygonscan.com", "api.basescan.org"
+]);
+let Excluded = _GetWatchlist("Web3Exclusions") | project SrcIpAddr;
+```
+
+```text
+To create the watchlist in Sentinel:
+1. Go to MS Sentinel -> Watchlist -> New
+2. Name and Alias: Web3Exclusions
+3. Upload a CSV like this: 
+
+   - <IP>,<Hostname>,<User>,<Reason>
+   - <IP>,<User>,<Reason>
+```
+
+<br/>
+
+`Rule 1`: Blockchain RPC Endpoint: Detects connections to public Polygon, BNB, Ethereum and TRON RPC endpoints used in EtherHiding to fetch C2 data from smart contracts
+
+
+```text
+let RpcHosts = dynamic([
+    "infura.io", "g.alchemy.com", "rpc.ankr.com", "drpc.org", "publicnode.com",
+    "llamarpc.com", "1rpc.io", "quiknode.pro", "blastapi.io", "onfinality.io",
+    "pokt.network", "pocket.network", "nodies.app", "nodereal.io", "getblock.io",
+    "chainstack.com", "blockpi.network", "gateway.tenderly.co", "cloudflare-eth.com",
+    "binance.org", "bnbchain.org", "polygon-rpc.com", "rpc.polygon.community",
+    "mainnet.base.org", "arb1.arbitrum.io", "mainnet.optimism.io", "api.avax.network",
+    "trongrid.io", "aptoslabs.com",
+    "api.etherscan.io", "api.bscscan.com", "api.polygonscan.com", "api.basescan.org"
+]);
+let Excluded = _GetWatchlist("Web3Exclusions") | project SrcIpAddr;
+
+
+let RPCEndpoints = dynamic([
     // Polygon
     "polygon-rpc.com","polygon.drpc.org","polygon-bor-rpc.publicnode.com","polygon.llamarpc.com",
     "polygon-mainnet.infura.io","polygon-mainnet.g.alchemy.com","rpc-mainnet.matic.network",
@@ -432,15 +474,288 @@ DeviceNetworkEvents
 | summarize FirstSeen=min(Timestamp), LastSeen=max(Timestamp), Hits=count(),
             URLs=make_set(RemoteUrl), RemoteIPs=make_set(RemoteIP)
     by DeviceName
-| sort by Hits desc`
+| sort by Hits desc
+```
 
-<<<<<<< HEAD
+<br/>
 
-Thanks for reading, 
-=======
-  
-Thanks for reading :) 
->>>>>>> 17770f5 (addition)
+`Rule 2`: First-seen blockchain RPC lookup from a host (ASIM DNS)
+
+```text
+let RpcHosts = dynamic([
+    "infura.io", "g.alchemy.com", "rpc.ankr.com", "drpc.org", "publicnode.com",
+    "llamarpc.com", "1rpc.io", "quiknode.pro", "blastapi.io", "onfinality.io",
+    "pokt.network", "pocket.network", "nodies.app", "nodereal.io", "getblock.io",
+    "chainstack.com", "blockpi.network", "gateway.tenderly.co", "cloudflare-eth.com",
+    "binance.org", "bnbchain.org", "polygon-rpc.com", "rpc.polygon.community",
+    "mainnet.base.org", "arb1.arbitrum.io", "mainnet.optimism.io", "api.avax.network",
+    "trongrid.io", "aptoslabs.com",
+    "api.etherscan.io", "api.bscscan.com", "api.polygonscan.com", "api.basescan.org"
+]);
+let Excluded = _GetWatchlist("Web3Exclusions") | project SrcIpAddr;
+
+_Im_WebSession
+| where (Url has_any ("action=eth_call", "action=eth_getTransactionByHash",
+                      "action=eth_getStorageAt") and Url has "module=proxy")
+     or (Url has_any (RpcHosts) and HttpRequestMethod =~ "POST")
+| where SrcIpAddr !in (Excluded)
+| extend Severity = iff(HttpUserAgent has_any ("Mozilla", "Chrome", "Safari"), "Medium", "High")
+| summarize FirstSeen = min(TimeGenerated), Calls = count(), Urls = make_set(Url, 10)
+            by SrcIpAddr, SrcUsername, SrcHostname, HttpUserAgent, Severity
+```
+<br/>
+
+`Rule 3`: Blockchain contract reads in web/proxy logs
+
+```text
+let RpcHosts = dynamic([
+    "infura.io", "g.alchemy.com", "rpc.ankr.com", "drpc.org", "publicnode.com",
+    "llamarpc.com", "1rpc.io", "quiknode.pro", "blastapi.io", "onfinality.io",
+    "pokt.network", "pocket.network", "nodies.app", "nodereal.io", "getblock.io",
+    "chainstack.com", "blockpi.network", "gateway.tenderly.co", "cloudflare-eth.com",
+    "binance.org", "bnbchain.org", "polygon-rpc.com", "rpc.polygon.community",
+    "mainnet.base.org", "arb1.arbitrum.io", "mainnet.optimism.io", "api.avax.network",
+    "trongrid.io", "aptoslabs.com",
+    "api.etherscan.io", "api.bscscan.com", "api.polygonscan.com", "api.basescan.org"
+]);
+let Excluded = _GetWatchlist("Web3Exclusions") | project SrcIpAddr;
+
+_Im_WebSession
+| where (Url has_any ("action=eth_call", "action=eth_getTransactionByHash",
+                      "action=eth_getStorageAt") and Url has "module=proxy")
+     or (Url has_any (RpcHosts) and HttpRequestMethod =~ "POST")
+| where SrcIpAddr !in (Excluded)
+| extend Severity = iff(HttpUserAgent has_any ("Mozilla", "Chrome", "Safari"), "Medium", "High")
+| summarize FirstSeen = min(TimeGenerated), Calls = count(), Urls = make_set(Url, 10)
+            by SrcIpAddr, SrcUsername, SrcHostname, HttpUserAgent, Severity
+```
+<br/>
+
+
+`Rule 4`: EtherHiding to ClickFix chain
+
+```text
+let RpcHosts = dynamic([
+    "infura.io", "g.alchemy.com", "rpc.ankr.com", "drpc.org", "publicnode.com",
+    "llamarpc.com", "1rpc.io", "quiknode.pro", "blastapi.io", "onfinality.io",
+    "pokt.network", "pocket.network", "nodies.app", "nodereal.io", "getblock.io",
+    "chainstack.com", "blockpi.network", "gateway.tenderly.co", "cloudflare-eth.com",
+    "binance.org", "bnbchain.org", "polygon-rpc.com", "rpc.polygon.community",
+    "mainnet.base.org", "arb1.arbitrum.io", "mainnet.optimism.io", "api.avax.network",
+    "trongrid.io", "aptoslabs.com",
+    "api.etherscan.io", "api.bscscan.com", "api.polygonscan.com", "api.basescan.org"
+]);
+let Excluded = _GetWatchlist("Web3Exclusions") | project SrcIpAddr;
+
+let Browsers = dynamic(["chrome.exe", "msedge.exe", "firefox.exe", "brave.exe", "opera.exe", "vivaldi.exe"]);
+let ScriptHosts = dynamic(["powershell.exe", "pwsh.exe", "cmd.exe", "wscript.exe", "cscript.exe",
+                           "mshta.exe", "rundll32.exe", "regsvr32.exe", "msiexec.exe", "curl.exe"]);
+let RpcContact = DeviceNetworkEvents
+    | where TimeGenerated > ago(1h)
+    | where InitiatingProcessFileName in~ (Browsers)
+    | where RemoteUrl has_any (RpcHosts)
+    | summarize RpcTime = min(TimeGenerated), RpcHostsSeen = make_set(RemoteUrl, 10) by DeviceId;
+let UserShell = DeviceProcessEvents
+    | where TimeGenerated > ago(1h)
+    | where FileName in~ (ScriptHosts)
+    | where InitiatingProcessFileName in~ ("explorer.exe", "WindowsTerminal.exe", "OpenConsole.exe")
+    | project ProcTime = TimeGenerated, DeviceId, DeviceName, AccountName,
+              FileName, ProcessCommandLine, InitiatingProcessFileName;
+RpcContact
+| join kind=inner UserShell on DeviceId
+| where ProcTime between (RpcTime .. (RpcTime + 15m))
+| project TimeGenerated = ProcTime, DeviceName, AccountName, RpcTime, RpcHostsSeen,
+          InitiatingProcessFileName, FileName, ProcessCommandLine
+```
+<br/>
+
+
+`Rule 5`: Non-browser process queries a blockchain RPC endpoint
+Detects malicious npm packages and scripts that use a smart contract as C2, such as DPRK fake-interview loaders running in node.exe
+
+
+```text
+let RpcHosts = dynamic([
+    "infura.io", "g.alchemy.com", "rpc.ankr.com", "drpc.org", "publicnode.com",
+    "llamarpc.com", "1rpc.io", "quiknode.pro", "blastapi.io", "onfinality.io",
+    "pokt.network", "pocket.network", "nodies.app", "nodereal.io", "getblock.io",
+    "chainstack.com", "blockpi.network", "gateway.tenderly.co", "cloudflare-eth.com",
+    "binance.org", "bnbchain.org", "polygon-rpc.com", "rpc.polygon.community",
+    "mainnet.base.org", "arb1.arbitrum.io", "mainnet.optimism.io", "api.avax.network",
+    "trongrid.io", "aptoslabs.com",
+    "api.etherscan.io", "api.bscscan.com", "api.polygonscan.com", "api.basescan.org"
+]);
+let Excluded = _GetWatchlist("Web3Exclusions") | project SrcIpAddr;
+
+let ScriptHosts = dynamic(["powershell.exe", "pwsh.exe", "cmd.exe", "wscript.exe", "cscript.exe",
+                           "mshta.exe", "rundll32.exe", "regsvr32.exe", "msiexec.exe",
+                           "curl.exe", "bitsadmin.exe", "certutil.exe"]);
+let DevRuntimes = dynamic(["node.exe", "python.exe", "pythonw.exe", "bun.exe", "deno.exe"]);
+DeviceNetworkEvents
+| where RemoteUrl has_any (RpcHosts)
+| where InitiatingProcessFileName in~ (ScriptHosts) or InitiatingProcessFileName in~ (DevRuntimes)
+| extend Severity = iff(InitiatingProcessFileName in~ (ScriptHosts), "High", "Medium")
+| project TimeGenerated, DeviceName, Severity, InitiatingProcessAccountName,
+          InitiatingProcessFileName, InitiatingProcessCommandLine,
+          InitiatingProcessParentFileName, RemoteUrl, RemoteIP
+```
+<br/>
+
+### Defender
+
+
+
+Paste the **Shared List** at the top of every rule, like i have done in the following rules below
+
+`Shared List`
+```text
+let RpcHosts = dynamic([
+    // Multi-chain RPC providers
+    "infura.io", "g.alchemy.com", "rpc.ankr.com", "drpc.org", "publicnode.com",
+    "llamarpc.com", "1rpc.io", "quiknode.pro", "blastapi.io", "onfinality.io",
+    "pokt.network", "pocket.network", "nodies.app", "nodereal.io", "getblock.io",
+    "chainstack.com", "blockpi.network", "gateway.tenderly.co", "cloudflare-eth.com",
+    // Chain-specific public RPCs
+    "binance.org", "bnbchain.org", "polygon-rpc.com", "rpc.polygon.community",
+    "mainnet.base.org", "arb1.arbitrum.io", "mainnet.optimism.io", "api.avax.network",
+    "trongrid.io", "aptoslabs.com",
+    // Explorer APIs that can proxy eth_call
+    "api.etherscan.io", "api.bscscan.com", "api.polygonscan.com", "api.basescan.org"
+]);
+let Browsers = dynamic(["chrome.exe", "msedge.exe", "firefox.exe", "brave.exe",
+                        "opera.exe", "vivaldi.exe", "iexplore.exe"]);
+let ScriptHosts = dynamic(["powershell.exe", "pwsh.exe", "cmd.exe", "wscript.exe",
+                           "cscript.exe", "mshta.exe", "rundll32.exe", "regsvr32.exe",
+                           "msiexec.exe", "curl.exe", "bitsadmin.exe", "certutil.exe"]);
+let DevRuntimes = dynamic(["node.exe", "python.exe", "pythonw.exe", "bun.exe", "deno.exe"]);
+let AllowedDevices = dynamic([]);   // Web3 / crypto teams
+```
+
+<br/>
+
+
+`Rule 1`: Script host queries a blockchain RPC endpoint
+
+```text
+let RpcHosts = dynamic([
+    // Multi-chain RPC providers
+    "infura.io", "g.alchemy.com", "rpc.ankr.com", "drpc.org", "publicnode.com",
+    "llamarpc.com", "1rpc.io", "quiknode.pro", "blastapi.io", "onfinality.io",
+    "pokt.network", "pocket.network", "nodies.app", "nodereal.io", "getblock.io",
+    "chainstack.com", "blockpi.network", "gateway.tenderly.co", "cloudflare-eth.com",
+    // Chain-specific public RPCs
+    "binance.org", "bnbchain.org", "polygon-rpc.com", "rpc.polygon.community",
+    "mainnet.base.org", "arb1.arbitrum.io", "mainnet.optimism.io", "api.avax.network",
+    "trongrid.io", "aptoslabs.com",
+    // Explorer APIs that can proxy eth_call
+    "api.etherscan.io", "api.bscscan.com", "api.polygonscan.com", "api.basescan.org"
+]);
+let Browsers = dynamic(["chrome.exe", "msedge.exe", "firefox.exe", "brave.exe",
+                        "opera.exe", "vivaldi.exe", "iexplore.exe"]);
+let ScriptHosts = dynamic(["powershell.exe", "pwsh.exe", "cmd.exe", "wscript.exe",
+                           "cscript.exe", "mshta.exe", "rundll32.exe", "regsvr32.exe",
+                           "msiexec.exe", "curl.exe", "bitsadmin.exe", "certutil.exe"]);
+let DevRuntimes = dynamic(["node.exe", "python.exe", "pythonw.exe", "bun.exe", "deno.exe"]);
+let AllowedDevices = dynamic([]);   // Web3 / crypto teams
+
+//Query
+DeviceNetworkEvents
+| where DeviceId !in (Web3Devices)
+| where RemoteUrl has_any (RpcHosts)
+| where InitiatingProcessFileName in~ (ScriptHosts)
+| project Timestamp, DeviceId, DeviceName, ReportId,
+          InitiatingProcessAccountName, InitiatingProcessAccountSid,
+          InitiatingProcessFileName, InitiatingProcessCommandLine,
+          InitiatingProcessParentFileName, RemoteUrl, RemoteIP
+```
+
+<br/>
+
+`Rule 2`: Browser reaches out to blockchain RPC host for the first time (Custom run it which ever fits, this one has every 24h)
+
+```text
+let RpcHosts = dynamic([
+    // Multi-chain RPC providers
+    "infura.io", "g.alchemy.com", "rpc.ankr.com", "drpc.org", "publicnode.com",
+    "llamarpc.com", "1rpc.io", "quiknode.pro", "blastapi.io", "onfinality.io",
+    "pokt.network", "pocket.network", "nodies.app", "nodereal.io", "getblock.io",
+    "chainstack.com", "blockpi.network", "gateway.tenderly.co", "cloudflare-eth.com",
+    // Chain-specific public RPCs
+    "binance.org", "bnbchain.org", "polygon-rpc.com", "rpc.polygon.community",
+    "mainnet.base.org", "arb1.arbitrum.io", "mainnet.optimism.io", "api.avax.network",
+    "trongrid.io", "aptoslabs.com",
+    // Explorer APIs that can proxy eth_call
+    "api.etherscan.io", "api.bscscan.com", "api.polygonscan.com", "api.basescan.org"
+]);
+let Browsers = dynamic(["chrome.exe", "msedge.exe", "firefox.exe", "brave.exe",
+                        "opera.exe", "vivaldi.exe", "iexplore.exe"]);
+let ScriptHosts = dynamic(["powershell.exe", "pwsh.exe", "cmd.exe", "wscript.exe",
+                           "cscript.exe", "mshta.exe", "rundll32.exe", "regsvr32.exe",
+                           "msiexec.exe", "curl.exe", "bitsadmin.exe", "certutil.exe"]);
+let DevRuntimes = dynamic(["node.exe", "python.exe", "pythonw.exe", "bun.exe", "deno.exe"]);
+let AllowedDevices = dynamic([]);   // Web3 / crypto teams
+
+// Query
+let Baseline = DeviceNetworkEvents
+    | where Timestamp between (ago(14d) .. ago(24h))
+    | where InitiatingProcessFileName in~ (Browsers)
+    | where RemoteUrl has_any (RpcHosts)
+    | distinct DeviceId;
+DeviceNetworkEvents
+| where Timestamp > ago(24h)
+| where DeviceId !in (Web3Devices) and DeviceId !in (Baseline)
+| where InitiatingProcessFileName in~ (Browsers)
+| where RemoteUrl has_any (RpcHosts)
+| summarize arg_min(Timestamp, ReportId), RpcHostsSeen = make_set(RemoteUrl, 10),
+            Calls = count() by DeviceId, DeviceName, InitiatingProcessAccountName,
+            InitiatingProcessAccountSid, InitiatingProcessFileName
+```
+
+<br/>
+
+`Rule 3`: EtherHiding to ClickFix chain
+
+```text
+let RpcHosts = dynamic([
+    // Multi-chain RPC providers
+    "infura.io", "g.alchemy.com", "rpc.ankr.com", "drpc.org", "publicnode.com",
+    "llamarpc.com", "1rpc.io", "quiknode.pro", "blastapi.io", "onfinality.io",
+    "pokt.network", "pocket.network", "nodies.app", "nodereal.io", "getblock.io",
+    "chainstack.com", "blockpi.network", "gateway.tenderly.co", "cloudflare-eth.com",
+    // Chain-specific public RPCs
+    "binance.org", "bnbchain.org", "polygon-rpc.com", "rpc.polygon.community",
+    "mainnet.base.org", "arb1.arbitrum.io", "mainnet.optimism.io", "api.avax.network",
+    "trongrid.io", "aptoslabs.com",
+    // Explorer APIs that can proxy eth_call
+    "api.etherscan.io", "api.bscscan.com", "api.polygonscan.com", "api.basescan.org"
+]);
+let Browsers = dynamic(["chrome.exe", "msedge.exe", "firefox.exe", "brave.exe",
+                        "opera.exe", "vivaldi.exe", "iexplore.exe"]);
+let ScriptHosts = dynamic(["powershell.exe", "pwsh.exe", "cmd.exe", "wscript.exe",
+                           "cscript.exe", "mshta.exe", "rundll32.exe", "regsvr32.exe",
+                           "msiexec.exe", "curl.exe", "bitsadmin.exe", "certutil.exe"]);
+let DevRuntimes = dynamic(["node.exe", "python.exe", "pythonw.exe", "bun.exe", "deno.exe"]);
+let AllowedDevices = dynamic([]);   // Web3 / crypto teams
+
+// Query
+let RpcContact = DeviceNetworkEvents
+    | where Timestamp > ago(1h)
+    | where DeviceId !in (Web3Devices)
+    | where InitiatingProcessFileName in~ (Browsers)
+    | where RemoteUrl has_any (RpcHosts)
+    | summarize RpcTime = min(Timestamp), RpcHostsSeen = make_set(RemoteUrl, 10) by DeviceId;
+let UserShell = DeviceProcessEvents
+    | where Timestamp > ago(1h)
+    | where FileName in~ (ScriptHosts)
+    | where InitiatingProcessFileName in~ ("explorer.exe", "WindowsTerminal.exe", "OpenConsole.exe")
+    | project ProcTime = Timestamp, DeviceId, DeviceName, ReportId, AccountName, AccountSid,
+              FileName, ProcessCommandLine, InitiatingProcessFileName;
+RpcContact
+| join kind=inner UserShell on DeviceId
+| where ProcTime between (RpcTime .. (RpcTime + 15m))
+| project Timestamp = ProcTime, DeviceId, DeviceName, ReportId, AccountName, AccountSid,
+          RpcTime, RpcHostsSeen, InitiatingProcessFileName, FileName, ProcessCommandLine
+```
 
 &nbsp;
 
