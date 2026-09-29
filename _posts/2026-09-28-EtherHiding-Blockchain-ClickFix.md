@@ -534,7 +534,7 @@ _Im_WebSession
 
 `Rule 4`: EtherHiding to ClickFix chain
 
-```text
+```text 
 let RpcHosts = dynamic([
     "infura.io", "g.alchemy.com", "rpc.ankr.com", "drpc.org", "publicnode.com",
     "llamarpc.com", "1rpc.io", "quiknode.pro", "blastapi.io", "onfinality.io",
