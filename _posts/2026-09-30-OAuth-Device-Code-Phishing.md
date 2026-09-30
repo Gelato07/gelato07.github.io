@@ -3,20 +3,8 @@ title: "OAuth Device Code Phishing Research and Findings"
 date: 2026-09-30 00:00:00 +0800
 categories: ["Threat Intelligence Research"]
 tags: [Threat Research]
-description: "This short report/article involes OAuth device code phishing, an attack technique that has grown rapidly in 2026. It covers how attackers use real login pages to steal access tokens and bypass MFA. Hope you Enjoy
+description: "A short report on OAuth device code phishing, an attack technique that has grown rapidly in 2026. It covers how attackers use real login pages to steal access tokens and bypass MFA."
 published: true
----
-
-# OAuth Device Code Phishing
-
-**Threat Overview:** Technique, campaigns and common indicators
-
-September 2026 · Prepared by Lachlan Gelavis
-
-| 15x to 37.5x                           | 50,000+                        | 3                                                |
-| -------------------------------------- | ------------------------------ | ------------------------------------------------ |
-| Increase in campaigns since early 2026 | Campaigns observed since March | Main PhaaS kits: EvilTokens, Tycoon 2FA, Cali365 |
-
 ---
 
 ## Threat Intel Findings Online
