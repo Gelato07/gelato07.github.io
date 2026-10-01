@@ -1,5 +1,6 @@
 /* IOC lookup for the Threat Intel page.
-   Searches assets/data/ioc-index.json (built by tools/fetch_threat_intel.py)
+   Searches assets/data/ioc-index.json (built by tools/fetch_threat_intel.py from
+   abuse.ch, CISA, CIRCL, Spamhaus, Emerging Threats, Blocklist.de, CINS Army and Tor feeds)
    entirely in the browser. The index is only downloaded on first use.
    Indicator values are attacker-controlled, so they are always shown defanged
    and inserted with textContent, never as links or HTML. */
@@ -63,8 +64,26 @@
     payload_delivery: { label: 'Payload delivery', text: 'Payload delivery: hosts or redirects to a malware download.' },
     payload: { label: 'Malware sample', text: 'A malware sample: this file hash is a known malicious payload.' },
     cc_skimming: { label: 'Card skimmer', text: 'Card skimming: steals payment card details typed into checkout pages.' },
-    malware_download: { label: 'Malware download', text: 'Serves a malware download that was online when the data was refreshed.' }
+    malware_download: { label: 'Malware download', text: 'Serves a malware download that was online when the data was refreshed.' },
+    ssl_c2: { label: 'C2 SSL certificate', text: 'An SSL certificate used by malware command-and-control servers. Seeing it in TLS traffic points to C2 communication.' },
+    advisory: { label: 'Government advisory' },
+    osint_report: { label: 'Threat report' }
   };
+
+  var SOURCE_LINKS = {
+    tf: function (id) { return ['https://threatfox.abuse.ch/ioc/' + id + '/', 'ThreatFox #']; },
+    uh: function (id) { return ['https://urlhaus.abuse.ch/url/' + id + '/', 'URLhaus #']; },
+    feodo: function (id) { return ['https://feodotracker.abuse.ch/browse/host/' + id + '/', 'Feodo Tracker ']; },
+    mb: function (id) { return ['https://bazaar.abuse.ch/sample/' + id + '/', 'MalwareBazaar ']; },
+    sslbl: function (id) { return ['https://sslbl.abuse.ch/ssl-certificates/sha1/' + id + '/', 'SSLBL ']; },
+    cisa: function (id) { return [reportUrl(id), 'CISA ' + decodeURIComponent(id).toUpperCase() + ' ']; },
+    circl: function (id) { return [reportUrl(id), 'CIRCL report ']; }
+  };
+
+  function reportUrl(id) {
+    var r = index.reports[decodeURIComponent(id)];
+    return r ? r.url : '#';
+  }
 
   var COMPROMISED_NOTE = 'Flagged as compromised: this is a real, legitimate website or server that attackers have broken into and are abusing. Its owner is most likely a victim, so treat it as unsafe, not as attacker-owned.';
 
@@ -114,8 +133,22 @@
     if (list) list.push(row); else map.set(key, [row]);
   }
 
+  function ipToInt(ip) {
+    return ip.split('.').reduce(function (n, o) { return n * 256 + (+o); }, 0);
+  }
+
   function buildIndex(json) {
-    var exact = new Map(), byHost = new Map(), families = {};
+    var exact = new Map(), byHost = new Map(), families = {}, ipLists = new Map(), cidrs = [];
+    (json.lists || []).forEach(function (list) {
+      list.values.forEach(function (v) {
+        if (list.kind === 'ip') { push(ipLists, v, list); return; }
+        // CIDR entries are "a.b.c.d/nn|SBL id"
+        var parts = v.split('|'), range = parts[0].split('/'), bits = +range[1];
+        var size = Math.pow(2, 32 - bits);
+        var start = Math.floor(ipToInt(range[0]) / size) * size;
+        cidrs.push({ start: start, end: start + size - 1, cidr: parts[0], ref: parts[1] || '', list: list });
+      });
+    });
     (json.families || []).forEach(function (f) { families[f[0]] = f[1]; });
     json.rows.forEach(function (r) {
       push(exact, r[VALUE], r);
@@ -123,7 +156,7 @@
       else if (r[TYPE] === 'ip') push(byHost, r[VALUE].split(':')[0], r);
       else if (r[TYPE] === 'url') push(byHost, hostOf(r[VALUE]), r);
     });
-    return { exact: exact, byHost: byHost, families: families, meta: json };
+    return { exact: exact, byHost: byHost, families: families, ipLists: ipLists, cidrs: cidrs, reports: json.reports || {}, meta: json };
   }
 
   function load() {
@@ -149,13 +182,23 @@
   }
 
   function describeIndex() {
-    var s = index.meta.sources || {};
-    var parts = [];
-    if (s.tf) parts.push('ThreatFox (last 7 days)');
-    if (s.uh) parts.push('URLhaus (online malware URLs)');
+    var sources = index.meta.sources || {};
+    var names = Object.keys(sources).map(function (k) { return sources[k].name || k; });
+    var total = index.meta.rows.length + (index.meta.lists || []).reduce(function (n, l) { return n + l.values.length; }, 0);
     var when = index.meta.generated_at ? new Date(index.meta.generated_at) : null;
-    status.textContent = 'Searching ' + fmt.format(index.meta.rows.length) + ' indicators from ' + parts.join(' and ') +
+    status.textContent = 'Searching ' + fmt.format(total) + ' indicators from ' + names.length + ' feeds (' + names.join(', ') + ')' +
       (when && !isNaN(when) ? ', refreshed ' + when.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }) : '') + '.';
+  }
+
+  // Blocklist entries for an IPv4 address: exact IP lists, then CIDR ranges
+  function listHits(ip) {
+    if (!ip || !isIp(ip)) return [];
+    var hits = (index.ipLists.get(ip) || []).map(function (list) { return { list: list }; });
+    var n = ipToInt(ip);
+    index.cidrs.forEach(function (c) {
+      if (n >= c.start && n <= c.end) hits.push({ list: c.list, cidr: c.cidr, ref: c.ref });
+    });
+    return hits;
   }
 
   // ---- Matching -------------------------------------------------------------
@@ -230,6 +273,7 @@
       links.push(['VirusTotal', 'https://www.virustotal.com/gui/file/' + v],
         ['MalwareBazaar', 'https://bazaar.abuse.ch/browse.php?search=' + q.type + '%3A' + v],
         ['ThreatFox', 'https://threatfox.abuse.ch/browse.php?search=ioc%3A' + v]);
+      if (q.type === 'sha1') links.push(['SSLBL', 'https://sslbl.abuse.ch/ssl-certificates/sha1/' + v + '/']);
     }
     if (!links.length) return null;
     var p = el('p', { 'class': 'ti-ioc-pivots' }, 'Look it up on: ');
@@ -241,10 +285,26 @@
   }
 
   function sourceLink(r) {
-    var id = encodeURIComponent(r[SOURCE_ID]);
-    return r[SOURCE] === 'tf'
-      ? link('https://threatfox.abuse.ch/ioc/' + id + '/', 'ThreatFox #' + r[SOURCE_ID])
-      : link('https://urlhaus.abuse.ch/url/' + id + '/', 'URLhaus #' + r[SOURCE_ID]);
+    var make = SOURCE_LINKS[r[SOURCE]];
+    if (!make) return el('span', null, r[SOURCE]);
+    var l = make(encodeURIComponent(r[SOURCE_ID]));
+    // Hash-keyed sources would print a 64-character ID, so they show just the feed name
+    return link(l[0], l[1].slice(-1) === '#' ? l[1] + r[SOURCE_ID] : l[1].trim());
+  }
+
+  function listBlock(hits) {
+    var box = el('div', { 'class': 'ti-ioc-lists' });
+    box.appendChild(el('h3', null, 'Blocklists'));
+    var ul = el('ul');
+    hits.forEach(function (h) {
+      var li = el('li');
+      li.appendChild(link(h.list.link, h.list.name));
+      li.appendChild(document.createTextNode(': ' + h.list.desc));
+      if (h.cidr) li.appendChild(document.createTextNode(' Range ' + defang(h.cidr) + (h.ref ? ' (' + h.ref + ')' : '') + '.'));
+      ul.appendChild(li);
+    });
+    box.appendChild(ul);
+    return box;
   }
 
   function matchRow(m) {
@@ -261,7 +321,10 @@
     var threat = THREAT_LABELS[r[THREAT]];
     facts.appendChild(el('span', null, threat ? threat.label : r[THREAT].replace(/_/g, ' ')));
     if (r[COMPROMISED]) facts.appendChild(el('span', { 'class': 'ti-badge' }, 'Compromised site'));
-    if (r[FIRST_SEEN]) facts.appendChild(el('span', null, 'First seen ' + r[FIRST_SEEN]));
+    if (r[FIRST_SEEN]) {
+      var published = r[SOURCE] === 'cisa' || r[SOURCE] === 'circl';
+      facts.appendChild(el('span', null, (published ? 'Published ' : 'First seen ') + r[FIRST_SEEN]));
+    }
     facts.appendChild(sourceLink(r));
     li.appendChild(facts);
 
@@ -272,20 +335,25 @@
   // Plain-language notes on what the matches point to, without repeats
   function context(matches) {
     var notes = [], seen = {};
-    function note(key, text, post) {
+    function note(key, text, post, ref) {
       if (seen[key]) return;
       seen[key] = true;
-      notes.push({ text: text, post: post });
+      notes.push({ text: text, post: post, ref: ref });
     }
     matches.forEach(function (m) {
       var r = m.row;
+      var report = (r[SOURCE] === 'cisa' || r[SOURCE] === 'circl') && index.reports[r[SOURCE_ID]];
+      if (report) {
+        note('report' + r[SOURCE_ID], (r[SOURCE] === 'cisa' ? 'Named in a CISA cybersecurity advisory: ' : 'Named in a threat report shared by CIRCL (Luxembourg\'s national CERT): '),
+          null, { href: report.url, text: report.title + (report.date ? ' (' + report.date + ')' : '') });
+      }
       if (r[COMPROMISED]) note('compromised', COMPROMISED_NOTE);
       var haystack = (r[FAMILY] + ' ' + r[TAGS]).toLowerCase();
       FAMILY_NOTES.forEach(function (f, i) {
         if (f.match.test(haystack)) note('family' + i, f.text, f.post);
       });
       var threat = THREAT_LABELS[r[THREAT]];
-      if (threat) note('threat' + r[THREAT], threat.text);
+      if (threat && threat.text) note('threat' + r[THREAT], threat.text);
     });
     if (!notes.length) return null;
 
@@ -294,6 +362,10 @@
     var ul = el('ul');
     notes.forEach(function (n) {
       var li = el('li', null, n.text);
+      if (n.ref) {
+        li.appendChild(link(n.ref.href, n.ref.text));
+        li.appendChild(document.createTextNode('.'));
+      }
       if (n.post && POSTS[n.post]) {
         li.appendChild(document.createTextNode(' Related write-up: '));
         li.appendChild(el('a', { href: POSTS[n.post].url }, POSTS[n.post].title));
@@ -321,17 +393,35 @@
     var matches = lookup(q);
     var direct = matches.filter(function (m) { return m.direct; });
     var related = matches.length - direct.length;
-    var verdict = el('p', { 'class': 'ti-ioc-verdict' + (direct.length ? ' is-hit' : '') });
-    if (direct.length) {
-      verdict.textContent = 'Malicious: found in ' + fmt.format(direct.length) + (direct.length === 1 ? ' record' : ' records') +
-        (related ? ', plus ' + fmt.format(related) + ' related.' : '.');
+    var hits = listHits(q.type === 'ip' ? q.value.split(':')[0] : q.host);
+    var byLevel = function (level) {
+      return hits.filter(function (h) { return h.list.level === level; }).map(function (h) { return h.list.name; })
+        .filter(function (n, i, a) { return a.indexOf(n) === i; });
+    };
+    var malLists = byLevel('malicious'), suspLists = byLevel('suspicious'), infoLists = byLevel('info');
+    var badLists = malLists.concat(suspLists);
+
+    var verdict = el('p', { 'class': 'ti-ioc-verdict' });
+    if (direct.length || malLists.length) {
+      verdict.classList.add('is-hit');
+      var found = [];
+      if (direct.length) found.push('found in ' + fmt.format(direct.length) + (direct.length === 1 ? ' record' : ' records'));
+      if (badLists.length) found.push('listed on ' + badLists.join(', '));
+      verdict.textContent = 'Malicious: ' + found.join(' and ') + (related ? ', plus ' + fmt.format(related) + ' related.' : '.');
+    } else if (suspLists.length) {
+      verdict.classList.add('is-warn');
+      verdict.textContent = 'Suspicious: listed on ' + suspLists.join(', ') + '. These lists flag attacking or poor-reputation IPs, ' +
+        'which are often shared or reassigned, so confirm before blocking.';
+    } else if (infoLists.length && !related) {
+      verdict.textContent = 'Not known to be malicious, but listed on ' + infoLists.join(', ') + '.';
     } else if (related) {
       verdict.textContent = 'No exact match, but ' + fmt.format(related) + ' related ' + (related === 1 ? 'record shares' : 'records share') +
         ' its host or domain. Check whether they are really connected before acting on them.';
     } else {
-      verdict.textContent = 'No match in this data. That is not proof it\'s safe: the data only covers recent ThreatFox reports and URLs that are online right now.';
+      verdict.textContent = 'No match in this data. That is not proof it\'s safe: these feeds only cover recent reports and currently active threats.';
     }
     card.appendChild(verdict);
+    if (hits.length) card.appendChild(listBlock(hits));
 
     if (matches.length) {
       // Explain the direct hits; fall back to the related records when there are none

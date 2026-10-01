@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-10-01T10:39:32+00:00",
+ "generated_at": "2026-10-01T11:31:10+00:00",
  "kev": {
   "catalog_version": "2026.09.30",
   "catalog_released": "2026-09-30T16:59:23.0688Z",
@@ -1118,11 +1118,11 @@
  },
  "threatfox": {
   "window_days": 7,
-  "total_iocs": 11428,
+  "total_iocs": 11392,
   "families": [
    {
     "label": "AsyncRAT",
-    "count": 3883
+    "count": 3865
    },
    {
     "label": "Unknown Loader",
@@ -1130,15 +1130,15 @@
    },
    {
     "label": "ClearFake",
-    "count": 913
+    "count": 907
    },
    {
     "label": "IClickFix",
-    "count": 847
+    "count": 851
    },
    {
     "label": "Mirai",
-    "count": 568
+    "count": 580
    },
    {
     "label": "AdaptixC2",
@@ -1146,7 +1146,7 @@
    },
    {
     "label": "Vidar",
-    "count": 239
+    "count": 244
    },
    {
     "label": "VShell",
@@ -1164,15 +1164,15 @@
   "threat_types": [
    {
     "label": "malware payloads",
-    "count": 5063
+    "count": 5076
    },
    {
     "label": "payload delivery sites",
-    "count": 4254
+    "count": 4255
    },
    {
     "label": "botnet C2 servers",
-    "count": 2083
+    "count": 2033
    },
    {
     "label": "card skimming sites",

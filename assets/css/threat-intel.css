@@ -362,9 +362,27 @@
   font-size: 0.9rem;
 }
 
-.ti-ioc-context h3 { font-size: 0.95rem; margin: 0 0 0.35rem; }
-.ti-ioc-context ul { margin: 0; padding-left: 1.1rem; }
-.ti-ioc-context li + li { margin-top: 0.25rem; }
+.ti-ioc-verdict.is-warn {
+  color: var(--heading-color, inherit);
+  font-weight: 600;
+  border-left: 3px solid #d18b00;
+  padding-left: 0.6rem;
+}
+
+.ti-ioc-context h3,
+.ti-ioc-lists h3 { font-size: 0.95rem; margin: 0 0 0.35rem; }
+.ti-ioc-context ul,
+.ti-ioc-lists ul { margin: 0; padding-left: 1.1rem; }
+.ti-ioc-context li + li,
+.ti-ioc-lists li + li { margin-top: 0.25rem; }
+
+.ti-ioc-lists {
+  border: 1px solid var(--ti-line);
+  border-radius: 6px;
+  padding: 0.6rem 0.9rem;
+  margin: 0.5rem 0 0.75rem;
+  font-size: 0.9rem;
+}
 
 .ti-ioc-matches {
   list-style: none;
