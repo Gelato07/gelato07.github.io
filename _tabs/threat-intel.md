@@ -6,21 +6,9 @@ order: 6
 
 <link rel="stylesheet" href="{{ '/assets/css/threat-intel.css' | relative_url }}">
 
-<div class="ti" id="ti" data-src="{{ '/assets/data/threat-intel.json' | relative_url }}?v={{ site.time | date: '%s' }}">
+<div class="ti" id="ti" data-ioc-url="{{ '/ioc-search/' | relative_url }}" data-src="{{ '/assets/data/threat-intel.json' | relative_url }}?v={{ site.time | date: '%s' }}">
   <p class="ti-lede" id="ti-lede">Loading the latest exploited-vulnerability data…</p>
   <p class="ti-meta" id="ti-meta"></p>
-
-  <section class="ti-ioc" aria-labelledby="ti-ioc-title" data-src="{{ '/assets/data/ioc-index.json' | relative_url }}?v={{ site.time | date: '%s' }}">
-    <h2 id="ti-ioc-title">IOC lookup</h2>
-    <p class="ti-note">Check an IP, domain, URL or file hash against recent abuse.ch ThreatFox and URLhaus data. Paste several at once, and defanged values like <code>hxxp://evil[.]com</code> are fine. Searches run in your browser, so nothing you enter is sent anywhere.</p>
-    <form class="ti-ioc-form" id="ti-ioc-form" role="search">
-      <label for="ti-ioc-q" class="ti-sr">Indicators to look up</label>
-      <input type="search" id="ti-ioc-q" placeholder="IP, domain, URL or MD5 / SHA1 / SHA256 hash" autocomplete="off" spellcheck="false">
-      <button type="submit">Search</button>
-    </form>
-    <p class="ti-count" id="ti-ioc-status" aria-live="polite"></p>
-    <div id="ti-ioc-results" aria-live="polite"></div>
-  </section>
 
   <section class="ti-section" id="ti-body" hidden>
     <div class="ti-head">
@@ -85,4 +73,3 @@ order: 6
 
 <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js"></script>
 <script defer src="{{ '/assets/js/threat-intel.js' | relative_url }}"></script>
-<script defer src="{{ '/assets/js/ioc-search.js' | relative_url }}"></script>

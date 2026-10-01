@@ -190,7 +190,8 @@
       var tf = data.threatfox;
       var types = tf.threat_types.slice(0, 3).map(function (r) { return r.label + ' (' + fmt.format(r.count) + ')'; });
       $('ti-tf-note').textContent = fmt.format(tf.total_iocs) + ' indicators were shared on ThreatFox in the last ' + tf.window_days +
-        ' days, mostly ' + types.join(', ') + '. Look any of them up with the IOC search above.';
+        ' days, mostly ' + types.join(', ') + '. Look any of them up on the ';
+      $('ti-tf-note').append(el('a', { href: root.getAttribute('data-ioc-url') }, 'IOC Search'), ' tab.');
       $('ti-tf').hidden = false;
       $('ti-tf-credit').hidden = false;
     }
