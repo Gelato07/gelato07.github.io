@@ -9,12 +9,12 @@ on:
       - README.md
       - LICENSE
 
-  # Daily rebuild at 6am Perth time (22:00 UTC) to refresh the Threat Intel tab
-  schedule:
-    - cron: "0 22 * * *"
-
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
+
+  # Rebuild daily so the Threat Intel page stays fresh (22:00 UTC = 6:00 am Perth)
+  schedule:
+    - cron: "0 22 * * *"
 
 permissions:
   contents: read
@@ -52,6 +52,7 @@ jobs:
       - name: Refresh threat intel data
         run: python3 tools/fetch_threat_intel.py
         env:
+          # Optional: add this repo secret to enable the ThreatFox malware section
           ABUSECH_AUTH_KEY: ${{ secrets.ABUSECH_AUTH_KEY }}
 
       - name: Build site

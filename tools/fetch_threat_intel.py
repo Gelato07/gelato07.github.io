@@ -1,20 +1,28 @@
 #!/usr/bin/env python3
-"""Build the data snapshot behind the Threat Intel tab.
+"""
+Fetch threat intelligence feeds and write a compact summary for the
+Threat Intel page at assets/data/threat-intel.json.
 
-Downloads CISA's Known Exploited Vulnerabilities (KEV) catalog, summarises it,
-and writes assets/data/threat-intel.json. The page reads that static file, so
-readers' browsers never call a third-party API.
+Sources
+  - CISA Known Exploited Vulnerabilities (KEV) catalog. No key needed.
+  - abuse.ch ThreatFox (optional). Only used when ABUSECH_AUTH_KEY is set.
+  - abuse.ch URLhaus list of currently online malware URLs. No key needed.
 
-If CISA's site is down, CISA's GitHub mirror is tried instead. If both fail,
-the existing snapshot is left untouched and the script exits 0, so a feed
-outage never breaks a deploy.
+It also writes assets/data/ioc-index.json, the indicator list behind the
+page's IOC search. Searches run in the reader's browser against that file,
+so the auth key is never exposed and nothing a reader types leaves the page.
 
-Optional: set ABUSECH_AUTH_KEY to add ThreatFox malware-family counts for the
-last 7 days. Only per-family counts are stored, never the indicators.
+Standard library only, so it runs on a bare GitHub Actions runner.
+If a fetch fails, the existing JSON file is left untouched so the page
+keeps showing the last good snapshot instead of breaking the build.
 
-Standard library only, so it runs on a stock GitHub Actions runner.
+Usage:
+  python3 tools/fetch_threat_intel.py
+  python3 tools/fetch_threat_intel.py --kev-file kev.json   # offline/testing
 """
 
+import argparse
+import csv
 import json
 import os
 import sys
@@ -22,121 +30,147 @@ import urllib.request
 from collections import Counter
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
+from urllib.parse import urlsplit
 
-KEV_SOURCES = [
+OUT_PATH = Path(__file__).resolve().parent.parent / "assets" / "data" / "threat-intel.json"
+IOC_PATH = OUT_PATH.with_name("ioc-index.json")
+
+KEV_URLS = [
     "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json",
-    "https://raw.githubusercontent.com/cisagov/kev-data/develop/known_exploited_vulnerabilities.json",
+    # CISA's official GitHub mirror, used if the main site is unreachable
+    "https://raw.githubusercontent.com/cisagov/kev-data/main/known_exploited_vulnerabilities.json",
 ]
-THREATFOX_API = "https://threatfox-api.abuse.ch/api/v1/"
+THREATFOX_URL = "https://threatfox-api.abuse.ch/api/v1/"
+URLHAUS_ONLINE_CSV = "https://urlhaus.abuse.ch/downloads/csv_online/"
+USER_AGENT = "Cyber-Weblog-ThreatIntel/1.0 (+https://gelato07.github.io)"
 
-OUTPUT = Path(__file__).resolve().parent.parent / "assets" / "data" / "threat-intel.json"
+RECENT_LIMIT = 75
+MONTHS_OF_HISTORY = 24
 
-LATEST_LIMIT = 200
-TREND_MONTHS = 24
-TOP_VENDORS = 10
-TOP_FAMILIES = 12
-USER_AGENT = "gelato07.github.io threat-intel builder"
+# ---------------------------------------------------------------------------
+# Weakness categorisation
+# ---------------------------------------------------------------------------
+# Each KEV entry is placed in one category, based on its CWE IDs first.
+# Generic CWEs (e.g. CWE-20 "Improper Input Validation") say little about the
+# attack, so for those we fall back to keywords in the vulnerability name.
 
-GENERIC_TYPE = "Input validation (generic)"
-OTHER_TYPE = "Other"
-NO_CWE_TYPE = "No CWE assigned"
-CATCH_ALLS = (GENERIC_TYPE, OTHER_TYPE, NO_CWE_TYPE)
+CATEGORIES = {
+    "Memory corruption": [
+        787, 416, 119, 122, 125, 190, 121, 120, 843, 415, 822, 824, 476, 191,
+        680, 763, 823, 124, 126, 127, 131, 789, 189, 1284, 457, 908, 681,
+    ],
+    "Command & code injection": [78, 94, 77, 74, 88, 95, 917, 1336, 96, 97, 138, 116, 1321],
+    "SQL injection": [89, 564],
+    "Authentication bypass": [287, 306, 288, 290, 798, 1188, 294, 302, 303, 305, 307, 640, 521, 522, 1390, 1391, 347, 295, 345],
+    "Access control & privilege escalation": [284, 264, 863, 269, 862, 276, 285, 732, 250, 266, 668, 639, 281, 267, 1220],
+    "Path traversal & file handling": [22, 23, 59, 434, 36, 73, 24, 35, 29, 552, 98, 61, 427, 426],
+    "Insecure deserialization": [502],
+    "Web client-side (XSS, CSRF, redirects)": [79, 352, 601, 1021, 80],
+    "Server-side request forgery": [918],
+    "Information disclosure": [200, 209, 532, 538, 215, 497, 201, 203],
+    "Security feature bypass": [693, 184, 358, 1390],
+    "Backdoors & supply chain": [506, 912, 494, 829],
+}
 
-# Attack types, checked in order. A vulnerability with several CWEs lands in the
-# first type that matches, so the specific types come before the catch-alls.
-ATTACK_TYPES = [
-    ("Memory corruption", {
-        "CWE-119", "CWE-120", "CWE-121", "CWE-122", "CWE-124", "CWE-125", "CWE-126",
-        "CWE-129", "CWE-131", "CWE-190", "CWE-191", "CWE-193", "CWE-401", "CWE-415",
-        "CWE-416", "CWE-476", "CWE-680", "CWE-704", "CWE-763", "CWE-787", "CWE-788",
-        "CWE-822", "CWE-823", "CWE-824", "CWE-843", "CWE-908", "CWE-1284", "CWE-134",
-        "CWE-189",
-    }),
-    ("Command / code injection", {
-        "CWE-74", "CWE-77", "CWE-78", "CWE-88", "CWE-94", "CWE-95", "CWE-96", "CWE-97",
-        "CWE-913", "CWE-917", "CWE-1321", "CWE-1336",
-    }),
-    ("Deserialization", {"CWE-502"}),
-    ("Auth bypass / access control", {
-        "CWE-250", "CWE-255", "CWE-259", "CWE-264", "CWE-266", "CWE-269", "CWE-276",
-        "CWE-280", "CWE-281", "CWE-282", "CWE-284", "CWE-285", "CWE-287", "CWE-288",
-        "CWE-289", "CWE-290", "CWE-294", "CWE-302", "CWE-303", "CWE-305", "CWE-306",
-        "CWE-345", "CWE-346", "CWE-347", "CWE-425", "CWE-522", "CWE-639", "CWE-640",
-        "CWE-648", "CWE-732", "CWE-798", "CWE-862", "CWE-863", "CWE-912", "CWE-1188",
-        "CWE-1220", "CWE-1390",
-    }),
-    ("Path traversal / file handling", {
-        "CWE-22", "CWE-23", "CWE-24", "CWE-29", "CWE-35", "CWE-36", "CWE-41", "CWE-59",
-        "CWE-61", "CWE-73", "CWE-98", "CWE-426", "CWE-427", "CWE-434", "CWE-552", "CWE-610",
-        "CWE-706", "CWE-1386",
-    }),
-    ("Web injection (SQLi, XSS, SSRF, XXE)", {
-        "CWE-79", "CWE-80", "CWE-89", "CWE-91", "CWE-352", "CWE-601", "CWE-611",
-        "CWE-776", "CWE-918", "CWE-943",
-    }),
-    ("Security feature bypass", {
-        "CWE-184", "CWE-254", "CWE-295", "CWE-311", "CWE-326", "CWE-451", "CWE-494",
-        "CWE-693", "CWE-807", "CWE-829",
-    }),
-    ("Information disclosure", {
-        "CWE-200", "CWE-201", "CWE-209", "CWE-312", "CWE-319", "CWE-359", "CWE-532",
-        "CWE-538",
-    }),
-    (GENERIC_TYPE, {"CWE-20", "CWE-1287"}),
+# CWEs too generic to classify on their own
+GENERIC_CWES = {"CWE-20", "CWE-399", "CWE-400", "CWE-404", "CWE-754", "CWE-703", "CWE-noinfo", "CWE-Other"}
+
+KEYWORDS = [  # checked in order, first match wins
+    ("SQL injection", ["sql injection"]),
+    ("Insecure deserialization", ["deserializ"]),
+    ("Server-side request forgery", ["server-side request forgery", "ssrf"]),
+    ("Web client-side (XSS, CSRF, redirects)", ["cross-site scripting", "xss", "cross-site request forgery", "csrf", "open redirect"]),
+    ("Path traversal & file handling", ["path traversal", "directory traversal", "file upload", "arbitrary file"]),
+    ("Memory corruption", ["use-after-free", "use after free", "buffer overflow", "out-of-bounds", "memory corruption",
+                           "heap", "type confusion", "integer overflow", "double free", "stack overflow", "null pointer"]),
+    ("Command & code injection", ["command injection", "code injection", "os command", "injection"]),
+    ("Authentication bypass", ["authentication bypass", "hard-coded", "hardcoded", "missing authentication",
+                               "improper authentication", "default credential"]),
+    ("Access control & privilege escalation", ["privilege escalation", "elevation of privilege", "access control",
+                                               "authorization", "permission"]),
+    ("Information disclosure", ["information disclosure", "information leak", "exposure of sensitive"]),
+    ("Backdoors & supply chain", ["backdoor", "embedded malicious", "supply chain"]),
+    ("Security feature bypass", ["security feature bypass", "bypass"]),
 ]
+OTHER = "Other / unspecified"
+
+CWE_TO_CATEGORY = {f"CWE-{n}": cat for cat, nums in CATEGORIES.items() for n in nums}
 
 
-def fetch_json(url, data=None, headers=None, timeout=60):
+def categorise(vuln):
+    for cwe in vuln.get("cwes") or []:
+        cwe = cwe.replace("NVD-", "")
+        if cwe in GENERIC_CWES:
+            continue
+        if cwe in CWE_TO_CATEGORY:
+            return CWE_TO_CATEGORY[cwe]
+    text = f"{vuln.get('vulnerabilityName', '')} {vuln.get('shortDescription', '')}".lower()
+    for category, words in KEYWORDS:
+        if any(w in text for w in words):
+            return category
+    return OTHER
+
+
+# ---------------------------------------------------------------------------
+# Fetching
+# ---------------------------------------------------------------------------
+
+def http_json(url, data=None, headers=None, timeout=60):
     req = urllib.request.Request(url, data=data, headers={"User-Agent": USER_AGENT, **(headers or {})})
     with urllib.request.urlopen(req, timeout=timeout) as resp:
         return json.load(resp)
 
 
+def http_text(url, timeout=120):
+    req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
+    with urllib.request.urlopen(req, timeout=timeout) as resp:
+        return resp.read().decode("utf-8", errors="replace")
+
+
 def fetch_kev():
-    for url in KEV_SOURCES:
+    last_error = None
+    for url in KEV_URLS:
         try:
-            data = fetch_json(url)
+            data = http_json(url)
             if data.get("vulnerabilities"):
                 print(f"KEV: {len(data['vulnerabilities'])} entries from {url}")
-                return data, url
-            print(f"KEV: no entries in response from {url}", file=sys.stderr)
-        except Exception as exc:  # network, HTTP or JSON errors
+                return data
+        except Exception as exc:  # noqa: BLE001 - we want to try the next mirror on any failure
+            last_error = exc
             print(f"KEV: failed to fetch {url}: {exc}", file=sys.stderr)
-    return None, None
+    raise RuntimeError(f"Could not fetch KEV catalog: {last_error}")
 
 
-def attack_type(cwes):
-    found = set(cwes or [])
-    if not found:
-        return NO_CWE_TYPE
-    for name, ids in ATTACK_TYPES:
-        if found & ids:
-            return name
-    return OTHER_TYPE
+def fetch_threatfox(auth_key, days=7):
+    body = json.dumps({"query": "get_iocs", "days": days}).encode()
+    data = http_json(THREATFOX_URL, data=body, headers={"Auth-Key": auth_key, "Content-Type": "application/json"})
+    if data.get("query_status") != "ok":
+        raise RuntimeError(f"ThreatFox query_status={data.get('query_status')}")
+    return data.get("data") or []
 
 
-def parse_date(value):
-    try:
-        return date.fromisoformat(value)
-    except (TypeError, ValueError):
-        return None
+def fetch_urlhaus_online():
+    text = http_text(URLHAUS_ONLINE_CSV)
+    rows = list(csv.reader(line for line in text.splitlines() if line and not line.startswith("#")))
+    if not rows:
+        raise RuntimeError("URLhaus returned no rows")
+    return rows
 
 
-def count_types(vulns):
-    counts = Counter(v["_type"] for v in vulns)
-    specific = [name for name, _ in ATTACK_TYPES if name not in CATCH_ALLS]
-    # Largest first, but keep the catch-all buckets at the bottom.
-    specific.sort(key=lambda n: -counts.get(n, 0))
-    return [{"name": n, "count": counts.get(n, 0)} for n in specific + list(CATCH_ALLS)]
+# ---------------------------------------------------------------------------
+# Summarising
+# ---------------------------------------------------------------------------
+
+def parse_day(s):
+    return datetime.strptime(s[:10], "%Y-%m-%d").date()
 
 
 def month_key(d):
     return f"{d.year:04d}-{d.month:02d}"
 
 
-def months_back(today, n):
-    y, m = today.year, today.month
-    keys = []
+def last_n_months(today, n):
+    keys, y, m = [], today.year, today.month
     for _ in range(n):
         keys.append(f"{y:04d}-{m:02d}")
         m -= 1
@@ -145,114 +179,224 @@ def months_back(today, n):
     return list(reversed(keys))
 
 
-def summarise_kev(kev, source, today):
-    vulns = []
-    for v in kev["vulnerabilities"]:
-        added = parse_date(v.get("dateAdded"))
-        if not added:
-            continue
-        v["_added"] = added
-        v["_type"] = attack_type(v.get("cwes"))
+def ranked(counter, limit=None):
+    return [{"label": k, "count": v} for k, v in counter.most_common(limit)]
+
+
+def summarise_kev(kev, today):
+    vulns = kev["vulnerabilities"]
+    year_ago = today - timedelta(days=365)
+    month_ago = today - timedelta(days=30)
+
+    for v in vulns:
+        v["_date"] = parse_day(v["dateAdded"])
+        v["_category"] = categorise(v)
         v["_ransomware"] = v.get("knownRansomwareCampaignUse", "").strip().lower() == "known"
-        vulns.append(v)
-    vulns.sort(key=lambda v: (v["_added"], v.get("cveID", "")), reverse=True)
 
-    last30 = [v for v in vulns if v["_added"] > today - timedelta(days=30)]
-    last12m = [v for v in vulns if v["_added"] > today - timedelta(days=365)]
-    this_year = [v for v in vulns if v["_added"].year == today.year]
+    last_year = [v for v in vulns if v["_date"] > year_ago]
 
-    month_keys = months_back(today, TREND_MONTHS)
-    totals = Counter(month_key(v["_added"]) for v in vulns)
-    ransom = Counter(month_key(v["_added"]) for v in vulns if v["_ransomware"])
-    monthly = [{"month": k, "total": totals.get(k, 0), "ransomware": ransom.get(k, 0)} for k in month_keys]
+    months = last_n_months(today, MONTHS_OF_HISTORY)
+    monthly_total = Counter(month_key(v["_date"]) for v in vulns)
+    monthly_ransom = Counter(month_key(v["_date"]) for v in vulns if v["_ransomware"])
 
-    vendors = Counter(v.get("vendorProject", "Unknown").strip() for v in this_year)
+    vendor_counts = Counter(v["vendorProject"].strip() for v in last_year)
+    top_vendor = vendor_counts.most_common(1)[0] if vendor_counts else None
 
-    latest = [{
-        "cve": v.get("cveID", ""),
-        "vendor": v.get("vendorProject", ""),
-        "product": v.get("product", ""),
-        "name": v.get("vulnerabilityName", ""),
-        "added": v["_added"].isoformat(),
-        "due": v.get("dueDate", ""),
-        "ransomware": v["_ransomware"],
-        "type": v["_type"],
-        "cwes": v.get("cwes", []),
-        "description": v.get("shortDescription", ""),
-    } for v in vulns[:LATEST_LIMIT]]
+    recent = sorted(vulns, key=lambda v: (v["_date"], v["cveID"]), reverse=True)[:RECENT_LIMIT]
 
     return {
-        "catalogVersion": kev.get("catalogVersion", ""),
-        "dateReleased": kev.get("dateReleased", ""),
-        "source": source,
+        "catalog_version": kev.get("catalogVersion"),
+        "catalog_released": kev.get("dateReleased"),
         "totals": {
             "all": len(vulns),
-            "last30": len(last30),
-            "ransomware": sum(v["_ransomware"] for v in vulns),
+            "last_30_days": sum(1 for v in vulns if v["_date"] > month_ago),
+            "last_365_days": len(last_year),
+            "ransomware_all": sum(1 for v in vulns if v["_ransomware"]),
+            "ransomware_365_days": sum(1 for v in last_year if v["_ransomware"]),
         },
-        "attackTypes": {"last12": count_types(last12m), "all": count_types(vulns)},
-        "monthly": monthly,
-        "topVendors": {
-            "year": today.year,
-            "rows": [{"name": n, "count": c} for n, c in vendors.most_common(TOP_VENDORS)],
+        "top_vendor_365_days": {"label": top_vendor[0], "count": top_vendor[1]} if top_vendor else None,
+        "categories": {
+            "all": ranked(Counter(v["_category"] for v in vulns)),
+            "last_365_days": ranked(Counter(v["_category"] for v in last_year)),
         },
-        "latest": latest,
+        "monthly": [
+            {"month": m, "total": monthly_total.get(m, 0), "ransomware": monthly_ransom.get(m, 0)} for m in months
+        ],
+        "vendors_365_days": ranked(vendor_counts, 10),
+        "recent": [
+            {
+                "cve": v["cveID"],
+                "vendor": v["vendorProject"],
+                "product": v["product"],
+                "name": v["vulnerabilityName"],
+                "date_added": v["dateAdded"],
+                "due_date": v.get("dueDate"),
+                "ransomware": v["_ransomware"],
+                "category": v["_category"],
+                "description": (v.get("shortDescription") or "")[:400],
+            }
+            for v in recent
+        ],
     }
 
 
-def fetch_threatfox(auth_key):
-    try:
-        body = json.dumps({"query": "get_iocs", "days": 7}).encode()
-        data = fetch_json(THREATFOX_API, data=body,
-                          headers={"Auth-Key": auth_key, "Content-Type": "application/json"})
-    except Exception as exc:
-        print(f"ThreatFox: request failed: {exc}", file=sys.stderr)
-        return None
-    if data.get("query_status") != "ok" or not isinstance(data.get("data"), list):
-        print(f"ThreatFox: unexpected status {data.get('query_status')!r}", file=sys.stderr)
-        return None
+THREAT_TYPE_LABELS = {
+    "botnet_cc": "botnet C2 servers",
+    "payload_delivery": "payload delivery sites",
+    "payload": "malware payloads",
+    "cc_skimming": "card skimming sites",
+}
+
+
+def summarise_threatfox(iocs, days):
     families = Counter(
-        (ioc.get("malware_printable") or "Unknown").strip()
-        for ioc in data["data"]
-        if (ioc.get("malware_printable") or "").strip().lower() not in ("", "unknown malware")
+        (i.get("malware_printable") or "Unknown").strip()
+        for i in iocs
+        if (i.get("malware_printable") or "").lower() not in ("", "unknown malware", "unknown")
     )
-    print(f"ThreatFox: {len(data['data'])} IOCs across {len(families)} families")
+    types = Counter(
+        THREAT_TYPE_LABELS.get(i.get("threat_type"), (i.get("threat_type") or "other").replace("_", " "))
+        for i in iocs
+    )
     return {
-        "days": 7,
-        "families": [{"name": n, "count": c} for n, c in families.most_common(TOP_FAMILIES)],
+        "window_days": days,
+        "total_iocs": len(iocs),
+        "families": ranked(families, 10),
+        "threat_types": ranked(types),
     }
 
 
-def load_existing():
-    try:
-        return json.loads(OUTPUT.read_text(encoding="utf-8"))
-    except (OSError, ValueError):
-        return None
+# ---------------------------------------------------------------------------
+# IOC search index
+# ---------------------------------------------------------------------------
+# Rows are short arrays to keep the file small:
+#   [value, type, family index, threat type, compromised (0/1), first seen, source, source id, tags]
+# Values are lowercased so the page can match them exactly.
 
+SRC_THREATFOX, SRC_URLHAUS = "tf", "uh"
+IOC_TYPES = {"ip:port": "ip", "domain": "domain", "url": "url",
+             "md5_hash": "md5", "sha1_hash": "sha1", "sha256_hash": "sha256"}
+
+
+def threatfox_rows(iocs, families):
+    rows = []
+    for i in iocs:
+        kind = IOC_TYPES.get(i.get("ioc_type"))
+        value = (i.get("ioc") or "").strip().lower()
+        if not kind or not value:
+            continue
+        name = (i.get("malware_printable") or "").strip()
+        if name.lower() in ("", "unknown malware", "unknown"):
+            name = ""
+        malpedia = i.get("malware_malpedia") or ""
+        if malpedia.rstrip("/").endswith("/unknown"):
+            malpedia = ""
+        fam = families.setdefault(name, [name, malpedia])[0] if name else ""
+        rows.append([
+            value, kind, fam, i.get("threat_type") or "", 1 if i.get("is_compromised") else 0,
+            (i.get("first_seen") or "")[:10], SRC_THREATFOX, str(i.get("id") or ""),
+            ",".join((i.get("tags") or [])[:6]),
+        ])
+    return rows
+
+
+def urlhaus_rows(csv_rows):
+    rows = []
+    for r in csv_rows:
+        if len(r) < 7:
+            continue
+        uid, added, url, threat, tags = r[0], r[1], r[2].strip().lower(), r[5], r[6]
+        if not url:
+            continue
+        tags = "" if tags == "None" else tags
+        rows.append([url, "url", "", threat, 0, added[:10], SRC_URLHAUS, uid, tags])
+    return rows
+
+
+def build_ioc_index(now, tf_iocs, uh_csv):
+    """Combine both feeds. A feed that failed this run keeps its rows from the last good index."""
+    previous = None
+    try:
+        previous = json.loads(IOC_PATH.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        pass
+
+    families, sources, rows = {}, {}, []
+    for src, fresh, convert in ((SRC_THREATFOX, tf_iocs, lambda d: threatfox_rows(d, families)),
+                                (SRC_URLHAUS, uh_csv, urlhaus_rows)):
+        if fresh is not None:
+            rows += convert(fresh)
+            sources[src] = now.isoformat(timespec="seconds")
+        elif previous and src in previous.get("sources", {}):
+            rows += [r for r in previous["rows"] if r[6] == src]
+            sources[src] = previous["sources"][src]
+            if src == SRC_THREATFOX:
+                families.update({f[0]: f for f in previous.get("families", [])})
+
+    if not rows:
+        return None
+    hosts = sum(1 for r in rows if r[1] == "url")
+    print(f"IOC index: {len(rows)} indicators ({hosts} URLs) from {', '.join(sorted(sources))}")
+    return {
+        "generated_at": now.isoformat(timespec="seconds"),
+        "sources": sources,
+        "families": sorted(families.values()),
+        "rows": rows,
+    }
+
+
+# ---------------------------------------------------------------------------
 
 def main():
-    now = datetime.now(timezone.utc)
-    existing = load_existing()
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("--kev-file", help="read KEV JSON from a local file instead of downloading")
+    parser.add_argument("--out", default=str(OUT_PATH), help="output path (default: %(default)s)")
+    args = parser.parse_args()
 
-    kev, source = fetch_kev()
-    if kev is None:
-        msg = "keeping the last good snapshot" if existing else "no snapshot exists yet; the page will show an error"
-        print(f"KEV: every source failed, {msg}.", file=sys.stderr)
+    out_path = Path(args.out)
+    now = datetime.now(timezone.utc)
+    today = now.date()
+
+    try:
+        if args.kev_file:
+            kev = json.loads(Path(args.kev_file).read_text(encoding="utf-8"))
+        else:
+            kev = fetch_kev()
+        summary = {"generated_at": now.isoformat(timespec="seconds"), "kev": summarise_kev(kev, today)}
+    except Exception as exc:  # noqa: BLE001
+        # Keep the last good snapshot so a feed outage never breaks the site build
+        print(f"ERROR: {exc}. Keeping existing {out_path} unchanged.", file=sys.stderr)
         return 0
 
-    out = {"generated": now.isoformat(timespec="seconds"), "kev": summarise_kev(kev, source, now.date())}
-
+    tf_iocs = None
     auth_key = os.environ.get("ABUSECH_AUTH_KEY", "").strip()
     if auth_key:
-        out["threatfox"] = fetch_threatfox(auth_key)
-        if out["threatfox"] is None and existing and existing.get("threatfox"):
-            out["threatfox"] = existing["threatfox"]  # keep last good ThreatFox counts
+        try:
+            days = 7
+            tf_iocs = fetch_threatfox(auth_key, days)
+            summary["threatfox"] = summarise_threatfox(tf_iocs, days)
+            print(f"ThreatFox: {summary['threatfox']['total_iocs']} IOCs in last {days} days")
+        except Exception as exc:  # noqa: BLE001
+            print(f"ThreatFox: skipped ({exc})", file=sys.stderr)
     else:
-        out["threatfox"] = None
+        print("ThreatFox: ABUSECH_AUTH_KEY not set, skipping")
 
-    OUTPUT.parent.mkdir(parents=True, exist_ok=True)
-    OUTPUT.write_text(json.dumps(out, separators=(",", ":"), ensure_ascii=False), encoding="utf-8")
-    print(f"Wrote {OUTPUT} ({OUTPUT.stat().st_size // 1024} KB)")
+    uh_csv = None
+    try:
+        uh_csv = fetch_urlhaus_online()
+        print(f"URLhaus: {len(uh_csv)} online malware URLs")
+    except Exception as exc:  # noqa: BLE001
+        print(f"URLhaus: skipped ({exc})", file=sys.stderr)
+
+    index = build_ioc_index(now, tf_iocs, uh_csv)
+    if index:
+        IOC_PATH.parent.mkdir(parents=True, exist_ok=True)
+        IOC_PATH.write_text(json.dumps(index, separators=(",", ":"), ensure_ascii=False), encoding="utf-8")
+        print(f"Wrote {IOC_PATH} ({IOC_PATH.stat().st_size / 1024:.1f} KB)")
+
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_text(json.dumps(summary, indent=1, ensure_ascii=False), encoding="utf-8")
+    print(f"Wrote {out_path} ({out_path.stat().st_size / 1024:.1f} KB)")
     return 0
 
 
